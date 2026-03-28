@@ -10,10 +10,18 @@ UV workspace monorepo with three packages:
 packages/
 ├── ai/        → tongue-ai       (PyTorch, MONAI, OpenCV, NumPy, Pandas, Label Studio SDK)
 ├── backend/   → tongue-backend   (FastAPI, Uvicorn, tongue-ai)
-└── frontend/  → tongue-frontend  (Streamlit, tongue-backend)
+└── frontend/  → tongue-frontend  (Streamlit, httpx)
 ```
 
-Dependency chain: `frontend → backend → ai`
+The frontend communicates with the backend exclusively via HTTP/SSE — no direct Python imports between frontend and backend/ai.
+
+```
+┌──────────┐   HTTP / SSE   ┌──────────┐   Python   ┌──────────┐
+│ Frontend │ ──────────────► │ Backend  │ ─────────► │    AI    │
+│ Streamlit│                 │ FastAPI  │            │ PyTorch  │
+└──────────┘                 └──────────┘            │  MONAI   │
+                                                     └──────────┘
+```
 
 ## Prerequisites
 
@@ -33,21 +41,23 @@ uv run uvicorn tongue_backend.app:app --reload --port 8000
 uv run streamlit run packages/frontend/src/tongue_frontend/app.py --server.port 8501
 ```
 
-## Verify Installation
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check + AI version |
+| POST | `/api/detect` | Detect tongue region (upload image) |
+| POST | `/api/recognize` | Recognize tongue features (upload image) |
+| POST | `/api/classify` | Classify tongue condition (upload image) |
+| POST | `/api/analyze` | Full pipeline: detect → recognize → classify |
+| POST | `/api/analyze/stream` | Full pipeline with SSE streaming |
 
 ```bash
-# AI package
-uv run python -c "
-from tongue_ai.detection import detect_tongue
-from tongue_ai.classification import classify_tongue
-import monai, torch
-print('PyTorch:', torch.__version__)
-print('MONAI:', monai.__version__)
-print(classify_tongue({}))
-"
+# Example: full analysis
+curl -X POST http://localhost:8000/api/analyze -F "file=@tongue.jpg"
 
-# Backend health check
-curl http://localhost:8000/health
+# Example: streaming analysis (SSE)
+curl -N -X POST http://localhost:8000/api/analyze/stream -F "file=@tongue.jpg"
 ```
 
 ## GPU Support

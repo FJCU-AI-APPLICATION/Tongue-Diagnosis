@@ -5,7 +5,7 @@ description = "Streamlit frontend for tongue diagnosis"
 requires-python = ">=3.11"
 dependencies = [
     "streamlit>=1.31",
-    "tongue-backend",
+    "httpx>=0.27",
 ]
 
 [build-system]
@@ -14,6 +14,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tongue_frontend"]
-
-[tool.uv.sources]
-tongue-backend = { workspace = true }

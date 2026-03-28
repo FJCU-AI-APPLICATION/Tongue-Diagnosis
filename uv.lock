@@ -1963,14 +1963,14 @@ name = "tongue-frontend"
 version = "0.1.0"
 source = { editable = "packages/frontend" }
 dependencies = [
+    { name = "httpx" },
     { name = "streamlit" },
-    { name = "tongue-backend" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "httpx", specifier = ">=0.27" },
     { name = "streamlit", specifier = ">=1.31" },
-    { name = "tongue-backend", editable = "packages/backend" },
 ]
 
 [[package]]
