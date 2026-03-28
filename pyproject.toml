@@ -1,0 +1,20 @@
+[project]
+name = "tongue-diagnosis"
+version = "0.1.0"
+description = "Realtime tongue diagnosis: detection, recognition, and classification"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+tongue-ai = { workspace = true }
+tongue-backend = { workspace = true }
+tongue-frontend = { workspace = true }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
