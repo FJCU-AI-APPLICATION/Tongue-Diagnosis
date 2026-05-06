@@ -1,0 +1,64 @@
+"""Tab 4: 模型設定 — registry YAML + reload."""
+
+from __future__ import annotations
+
+import gradio as gr
+
+from tongue_frontend import api
+
+
+def _load() -> tuple[str, str]:
+    s = api.get_config("registry")
+    flag = "default" if s.get("is_default") else "custom"
+    h = api.health()
+    heads = "、".join(h.get("heads_loaded", [])) or "(none)"
+    return s["content"], f"狀態：{flag}　已載入 {len(h.get('heads_loaded', []))} 個 heads：{heads}"
+
+
+def _save(content: str) -> str:
+    out = api.put_config("registry", content)
+    if "error" in out:
+        return f"⚠ 儲存失敗：{out['error']}"
+    return "已儲存 — 點「Apply & Reload Models」生效"
+
+
+def _reset() -> tuple[str, str]:
+    api.reset_config("registry")
+    content, status = _load()
+    return content, "已還原預設值"
+
+
+def _reload() -> str:
+    out = api.reload_registry()
+    if "error" in out:
+        return f"⚠ 重新載入失敗：{out['error']}"
+    loaded = out.get("loaded", [])
+    failed = out.get("failed", [])
+    msg = f"已載入 {len(loaded)} heads"
+    if failed:
+        msg += f"，失敗 {len(failed)}：{failed}"
+    return msg
+
+
+def build() -> gr.Blocks:
+    with gr.Blocks() as view:
+        gr.Markdown("### 模型設定 (registry YAML)")
+        gr.Markdown(
+            "編輯各 task head 的 ONNX 路徑、輸入大小、normalisation、class_names、threshold。"
+            " 「儲存」只會持久化 YAML；要套用必須點「Apply & Reload Models」。"
+        )
+        textbox = gr.Code(language="yaml", label="registry.yaml", lines=30)
+        with gr.Row():
+            save_btn = gr.Button("儲存")
+            reset_btn = gr.Button("還原預設")
+            reload_disk_btn = gr.Button("從磁碟重新載入")
+            apply_btn = gr.Button("Apply & Reload Models", variant="primary")
+        status_box = gr.Markdown()
+        reload_status = gr.Markdown()
+
+        view.load(fn=_load, outputs=[textbox, status_box])
+        save_btn.click(fn=_save, inputs=[textbox], outputs=[status_box])
+        reset_btn.click(fn=_reset, outputs=[textbox, status_box])
+        reload_disk_btn.click(fn=_load, outputs=[textbox, status_box])
+        apply_btn.click(fn=_reload, outputs=[reload_status])
+    return view
