@@ -8,7 +8,7 @@ import httpx
 
 
 BASE_URL = os.environ.get("TONGUE_BACKEND_URL", "http://localhost:8000")
-TIMEOUT = 60.0
+TIMEOUT = float(os.environ.get("TONGUE_BACKEND_TIMEOUT", "60"))
 
 
 def _client() -> httpx.Client:

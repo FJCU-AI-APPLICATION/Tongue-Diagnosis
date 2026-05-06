@@ -44,6 +44,19 @@ uv run python -m tongue_frontend.app
 | POST | `/api/config/{section}/reset` | Restore default |
 | POST | `/api/config/registry/reload` | Re-init ONNX sessions |
 
+## Environment Variables
+
+All four POC services run with sensible defaults; override only when needed.
+
+| Var | Default | Used by | Purpose |
+|---|---|---|---|
+| `TONGUE_BACKEND_URL` | `http://localhost:8000` | frontend | Where the Gradio app talks to FastAPI |
+| `TONGUE_BACKEND_TIMEOUT` | `60` | frontend | httpx timeout in seconds — raise if Gemini calls run long |
+| `TONGUE_MAX_UPLOAD_MB` | `10` | backend | Maximum upload size for `/api/analyze` |
+| `GRADIO_SERVER_NAME` | `0.0.0.0` | frontend | Gradio bind interface (`127.0.0.1` to restrict to local) |
+| `GRADIO_SERVER_PORT` | `7860` | frontend | Gradio port |
+| `GOOGLE_APPLICATION_CREDENTIALS` | — | backend | ADK / Vertex AI auth (alternative: `gcloud auth application-default login`) |
+
 ## GPU Support
 
 Replace the PyTorch index URL in the root `pyproject.toml`:

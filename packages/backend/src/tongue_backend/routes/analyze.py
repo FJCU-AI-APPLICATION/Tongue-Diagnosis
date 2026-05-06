@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, HTTPException, Request, UploadFile
 
 from tongue_backend.pipeline import ImageDecodeError, analyze
 
 
-MAX_BYTES = 10 * 1024 * 1024  # 10 MB
+# Override with env: TONGUE_MAX_UPLOAD_MB=20 → 20 MB cap
+MAX_UPLOAD_MB = int(os.environ.get("TONGUE_MAX_UPLOAD_MB", "10"))
+MAX_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 router = APIRouter(prefix="/api", tags=["analyze"])
 
