@@ -61,9 +61,7 @@ class TaskHead:
         # Take batch index 0
         scores = logits[0]
         if self.head_type == "single":
-            # For single-label, argmax is identical on logits or probs; report
-            # the raw score (logit or prob) at the winning index directly.
-            probs = scores
+            probs = scores if self.already_probs else _softmax(scores)
             idx = int(np.argmax(probs))
             return HeadResult(
                 task=self.name,
