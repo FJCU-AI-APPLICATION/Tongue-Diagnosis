@@ -1,0 +1,91 @@
+# Tongue diagnosis registry — paths are relative to this file's directory.
+# ONNX artefacts live in ../../ai/models/. Edit and Apply & Reload Models from the UI.
+
+detector: null  # set to a mapping like {onnx_path: ../../ai/models/detect_tongue.onnx, ...}
+
+heads:
+  - task: 舌色
+    head_type: single
+    onnx_path: ../../ai/models/tongue_color.onnx
+    input_size: [224, 224]
+    normalise:
+      mean: [0.485, 0.456, 0.406]
+      std:  [0.229, 0.224, 0.225]
+    class_names: ["淡","淡紅","微紅","紅","絳","青紫","暗"]
+
+  - task: 舌質
+    head_type: multi
+    threshold: 0.5
+    onnx_path: ../../ai/models/tongue_body.onnx
+    input_size: [224, 224]
+    normalise:
+      mean: [0.485, 0.456, 0.406]
+      std:  [0.229, 0.224, 0.225]
+    class_names: ["齒痕","胖大","瘦薄","老","嫩","無異常"]
+
+  - task: 舌態
+    head_type: single
+    onnx_path: ../../ai/models/tongue_movement.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["偏斜","無異常"]
+
+  - task: 朱點部位
+    head_type: multi
+    threshold: 0.5
+    onnx_path: ../../ai/models/red_dots.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["舌尖","兩側","中根","無"]
+
+  - task: 瘀斑瘀點部位
+    head_type: multi
+    threshold: 0.5
+    onnx_path: ../../ai/models/ecchymosis.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["舌尖","兩側","中根","無"]
+
+  - task: 裂紋
+    head_type: single
+    onnx_path: ../../ai/models/fissures.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["苔裂","質裂","無異常"]
+
+  - task: 舌津
+    head_type: single
+    onnx_path: ../../ai/models/moisture.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["少","正常","多"]
+
+  - task: 舌苔顏色
+    head_type: multi
+    threshold: 0.5
+    onnx_path: ../../ai/models/coating_color.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["白","黃","灰","黑","染"]
+
+  - task: 舌苔厚薄
+    head_type: single
+    onnx_path: ../../ai/models/coating_thickness.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["無","少","薄少","薄","微","微厚","厚"]
+
+  - task: 舌苔根
+    head_type: single
+    onnx_path: ../../ai/models/coating_root.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["有根","無根","無異常"]
+
+  - task: 舌下絡脈
+    head_type: multi
+    threshold: 0.5
+    onnx_path: ../../ai/models/sublingual.onnx
+    input_size: [224, 224]
+    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
+    class_names: ["怒張","曲張","囊柱囊泡","瘀血絲","舌下肉埠腫脹","無異常"]
