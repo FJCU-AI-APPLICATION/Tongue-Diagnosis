@@ -18,3 +18,9 @@ tongue-frontend = { workspace = true }
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.pytest.ini_options]
+# importlib mode lets the workspace-root test run discover same-named test
+# files across packages (e.g., backend/tests/test_settings.py +
+# frontend/tests/test_settings.py) without import collisions.
+addopts = "--import-mode=importlib"

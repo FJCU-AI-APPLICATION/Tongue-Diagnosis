@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import os
-
 import httpx
 
-
-BASE_URL = os.environ.get("TONGUE_BACKEND_URL", "http://localhost:8000")
-TIMEOUT = float(os.environ.get("TONGUE_BACKEND_TIMEOUT", "60"))
+from tongue_frontend.settings import settings
 
 
 def _client() -> httpx.Client:
-    return httpx.Client(base_url=BASE_URL, timeout=TIMEOUT)
+    return httpx.Client(base_url=settings.backend_url, timeout=settings.backend_timeout)
 
 
 def analyze(image_bytes: bytes, filename: str = "tongue.jpg") -> dict:

@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image
 
 from tongue_frontend import api
+from tongue_frontend.settings import settings
 
 
 def _heads_to_rows(heads: list[dict]) -> list[list[str]]:
@@ -42,7 +43,7 @@ def _on_analyze(image: np.ndarray | None):
             err = str(e)
         return [], "", f"⚠ 分析失敗：{err}", "", ""
     except httpx.ConnectError:
-        return [], "", f"⚠ 無法連線到後端 ({api.BASE_URL}) — 請啟動 backend", "", ""
+        return [], "", f"⚠ 無法連線到後端 ({settings.backend_url}) — 請啟動 backend", "", ""
     rows = _heads_to_rows(result["heads"])
     timing = result["timing_ms"]
     timing_str = " · ".join(f"{k}: {v}ms" for k, v in timing.items())

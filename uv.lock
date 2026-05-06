@@ -4183,6 +4183,7 @@ source = { editable = "packages/backend" }
 dependencies = [
     { name = "fastapi" },
     { name = "google-adk" },
+    { name = "pydantic-settings" },
     { name = "python-multipart" },
     { name = "pyyaml" },
     { name = "tongue-ai" },
@@ -4198,6 +4199,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.110" },
     { name = "google-adk", specifier = ">=0.2" },
+    { name = "pydantic-settings", specifier = ">=2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "python-multipart", specifier = ">=0.0.9" },
     { name = "pyyaml", specifier = ">=6" },
@@ -4218,6 +4220,7 @@ source = { editable = "packages/frontend" }
 dependencies = [
     { name = "gradio" },
     { name = "httpx" },
+    { name = "pydantic-settings" },
 ]
 
 [package.optional-dependencies]
@@ -4230,6 +4233,7 @@ dev = [
 requires-dist = [
     { name = "gradio", specifier = ">=4" },
     { name = "httpx", specifier = ">=0.27" },
+    { name = "pydantic-settings", specifier = ">=2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "respx", marker = "extra == 'dev'", specifier = ">=0.21" },
 ]

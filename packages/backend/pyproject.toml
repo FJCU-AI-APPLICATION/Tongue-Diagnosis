@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn[standard]>=0.27",
     "python-multipart>=0.0.9",
     "pyyaml>=6",
+    "pydantic-settings>=2",
     "google-adk>=0.2",
     "tongue-ai",
 ]

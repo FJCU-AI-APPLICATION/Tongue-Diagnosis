@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import os
-
 import gradio as gr
 
+from tongue_frontend.settings import settings
 from tongue_frontend.views import analyze, prompt_editor, llm_editor, registry_editor
 
 
@@ -25,10 +24,7 @@ def build_app() -> gr.Blocks:
 
 
 if __name__ == "__main__":
-    # Honour Gradio's standard env vars so the bind interface and port can be
-    # changed without code edits (e.g., GRADIO_SERVER_NAME=127.0.0.1 to
-    # restrict to localhost, or GRADIO_SERVER_PORT=8080).
     build_app().launch(
-        server_name=os.environ.get("GRADIO_SERVER_NAME", "0.0.0.0"),
-        server_port=int(os.environ.get("GRADIO_SERVER_PORT", "7860")),
+        server_name=settings.gradio_server_name,
+        server_port=settings.gradio_server_port,
     )
