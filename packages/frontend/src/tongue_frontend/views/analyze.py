@@ -10,17 +10,18 @@ import numpy as np
 from PIL import Image
 
 from tongue_frontend import api
+from tongue_frontend.models import HeadResult
 from tongue_frontend.settings import settings
 
 
-def _heads_to_rows(heads: list[dict]) -> list[list[str]]:
+def _heads_to_rows(heads: list[HeadResult]) -> list[list[str]]:
     rows = []
     for h in heads:
-        if h.get("error"):
-            rows.append([h["task"], f"⚠ {h['error']}"])
+        if h.error:
+            rows.append([h.task, f"⚠ {h.error}"])
             continue
-        preds = "、".join(f"{p['label']} ({p['score']:.2f})" for p in h.get("predictions", []))
-        rows.append([h["task"], preds or "(無)"])
+        preds = "、".join(f"{p.label} ({p.score:.2f})" for p in h.predictions)
+        rows.append([h.task, preds or "(無)"])
     return rows
 
 
@@ -44,10 +45,10 @@ def _on_analyze(image: np.ndarray | None):
         return [], "", f"⚠ 分析失敗：{err}", "", ""
     except httpx.ConnectError:
         return [], "", f"⚠ 無法連線到後端 ({settings.backend_url}) — 請啟動 backend", "", ""
-    rows = _heads_to_rows(result["heads"])
-    timing = result["timing_ms"]
+    rows = _heads_to_rows(result.heads)
+    timing = result.timing_ms.model_dump()
     timing_str = " · ".join(f"{k}: {v}ms" for k, v in timing.items())
-    return rows, result["comment"], result["disclaimer"], result["user_message"], timing_str
+    return rows, result.comment, result.disclaimer, result.user_message, timing_str
 
 
 def build() -> gr.Blocks:

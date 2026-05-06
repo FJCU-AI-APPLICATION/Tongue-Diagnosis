@@ -3,20 +3,26 @@
 from __future__ import annotations
 
 import gradio as gr
+import httpx
 
 from tongue_frontend import api
 
 
 def _load() -> tuple[str, str]:
     s = api.get_config("llm")
-    flag = "default" if s.get("is_default") else "custom"
-    return s["content"], f"狀態：{flag}"
+    flag = "default" if s.is_default else "custom"
+    return s.content, f"狀態：{flag}"
 
 
 def _save(content: str) -> str:
-    out = api.put_config("llm", content)
-    if "error" in out:
-        return f"⚠ 儲存失敗：{out['error']}"
+    try:
+        api.put_config("llm", content)
+    except httpx.HTTPStatusError as e:
+        try:
+            err = e.response.json().get("error", str(e))
+        except Exception:
+            err = str(e)
+        return f"⚠ 儲存失敗：{err}"
     return "已儲存 — 下次分析將使用新設定"
 
 

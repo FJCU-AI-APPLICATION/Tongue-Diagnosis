@@ -1,4 +1,4 @@
-"""Tongue AI -- detection, recognition, and classification models."""
+"""Tongue AI -- detection + registry-driven multi-head classification."""
 
 from tongue_ai.types import BBox, ClassScore, HeadResult, Normalisation
 from tongue_ai.task_head import TaskHead
