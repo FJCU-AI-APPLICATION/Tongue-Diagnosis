@@ -31,7 +31,7 @@ def build() -> gr.Blocks:
         gr.Markdown("### 系統提示詞 (大眾版規則)")
         gr.Markdown("編輯後按「儲存」即可生效；下次「分析」會立刻採用。")
         textbox = gr.Textbox(
-            lines=30, label="system prompt", show_copy_button=True
+            lines=30, label="system prompt", buttons=["copy"]
         )
         with gr.Row():
             save_btn = gr.Button("儲存", variant="primary")
