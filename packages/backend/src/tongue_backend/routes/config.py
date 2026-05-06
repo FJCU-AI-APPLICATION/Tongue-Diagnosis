@@ -35,6 +35,9 @@ def reload_registry(request: Request):
     from tongue_ai import load_registry, RegistryError
 
     previous = getattr(request.app.state, "registry", None)
+    # Ensure the 'current' YAML exists (copies from default if missing).
+    # Needed when startup didn't run (e.g. TestClient used without `with`).
+    registry_store.load_current_text()
     # Use registry_store.REGISTRY_CURRENT so monkeypatching in tests is respected.
     registry_current = registry_store.REGISTRY_CURRENT
     try:
