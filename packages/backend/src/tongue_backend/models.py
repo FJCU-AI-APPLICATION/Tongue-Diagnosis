@@ -63,6 +63,12 @@ class PutBody(BaseModel):
     content: str
 
 
+class OkResponse(BaseModel):
+    """Trivial ack returned by ``PUT`` / ``POST .../reset``."""
+
+    ok: bool = True
+
+
 class ReloadResult(BaseModel):
     """Returned by ``POST /api/config/registry/reload``."""
 

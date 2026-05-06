@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
 
-from tongue_backend.models import ConfigStatus, PutBody, ReloadResult
+from tongue_backend.models import ConfigStatus, OkResponse, PutBody, ReloadResult
 from tongue_backend.stores import llm_store, prompt_store, registry_store
 
 
@@ -55,18 +55,18 @@ def get_section(section: str) -> ConfigStatus:
     return status_fn()
 
 
-@router.put("/{section}")
-def put_section(section: str, body: PutBody) -> dict:
+@router.put("/{section}", response_model=OkResponse)
+def put_section(section: str, body: PutBody) -> OkResponse:
     _, save_fn, _ = _resolve(section)
     try:
         save_fn(body.content)
     except (llm_store.ValidationError, registry_store.ValidationError) as e:
         raise HTTPException(status_code=422, detail={"error": str(e)})
-    return {"ok": True}
+    return OkResponse()
 
 
-@router.post("/{section}/reset")
-def reset_section(section: str) -> dict:
+@router.post("/{section}/reset", response_model=OkResponse)
+def reset_section(section: str) -> OkResponse:
     _, _, reset_fn = _resolve(section)
     reset_fn()
-    return {"ok": True}
+    return OkResponse()

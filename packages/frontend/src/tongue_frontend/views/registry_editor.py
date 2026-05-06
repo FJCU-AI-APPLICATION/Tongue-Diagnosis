@@ -3,40 +3,48 @@
 from __future__ import annotations
 
 import gradio as gr
+import httpx
 
 from tongue_frontend import api
 
 
+def _err(e: httpx.HTTPStatusError) -> str:
+    try:
+        return e.response.json().get("error", str(e))
+    except Exception:
+        return str(e)
+
+
 def _load() -> tuple[str, str]:
     s = api.get_config("registry")
-    flag = "default" if s.get("is_default") else "custom"
+    flag = "default" if s.is_default else "custom"
     h = api.health()
-    heads = "、".join(h.get("heads_loaded", [])) or "(none)"
-    return s["content"], f"狀態：{flag}　已載入 {len(h.get('heads_loaded', []))} 個 heads：{heads}"
+    heads = "、".join(h.heads_loaded) or "(none)"
+    return s.content, f"狀態：{flag}　已載入 {len(h.heads_loaded)} 個 heads：{heads}"
 
 
 def _save(content: str) -> str:
-    out = api.put_config("registry", content)
-    if "error" in out:
-        return f"⚠ 儲存失敗：{out['error']}"
+    try:
+        api.put_config("registry", content)
+    except httpx.HTTPStatusError as e:
+        return f"⚠ 儲存失敗：{_err(e)}"
     return "已儲存 — 點「Apply & Reload Models」生效"
 
 
 def _reset() -> tuple[str, str]:
     api.reset_config("registry")
-    content, status = _load()
+    content, _ = _load()
     return content, "已還原預設值"
 
 
 def _reload() -> str:
-    out = api.reload_registry()
-    if "error" in out:
-        return f"⚠ 重新載入失敗：{out['error']}"
-    loaded = out.get("loaded", [])
-    failed = out.get("failed", [])
-    msg = f"已載入 {len(loaded)} heads"
-    if failed:
-        msg += f"，失敗 {len(failed)}：{failed}"
+    try:
+        out = api.reload_registry()
+    except httpx.HTTPStatusError as e:
+        return f"⚠ 重新載入失敗：{_err(e)}"
+    msg = f"已載入 {len(out.loaded)} heads"
+    if out.failed:
+        msg += f"，失敗 {len(out.failed)}：{out.failed}"
     return msg
 
 
