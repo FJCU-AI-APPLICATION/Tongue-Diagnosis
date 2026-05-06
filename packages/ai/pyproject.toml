@@ -11,6 +11,8 @@ dependencies = [
     "torchvision>=0.17",
     "monai>=1.3",
     "label-studio-sdk>=1.0",
+    "onnxruntime>=1.17",
+    "pyyaml>=6",
 ]
 
 [build-system]
