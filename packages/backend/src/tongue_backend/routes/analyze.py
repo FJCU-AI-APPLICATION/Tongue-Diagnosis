@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
 
+from tongue_backend.models import AnalyzeResponse
 from tongue_backend.pipeline import ImageDecodeError, analyze
 from tongue_backend.settings import settings
 
@@ -11,8 +12,8 @@ from tongue_backend.settings import settings
 router = APIRouter(prefix="/api", tags=["analyze"])
 
 
-@router.post("/analyze")
-async def api_analyze(file: UploadFile, request: Request) -> dict:
+@router.post("/analyze", response_model=AnalyzeResponse)
+async def api_analyze(file: UploadFile, request: Request) -> AnalyzeResponse:
     data = await file.read()
     if len(data) == 0:
         raise HTTPException(status_code=400, detail={"error": "missing file"})
@@ -21,7 +22,10 @@ async def api_analyze(file: UploadFile, request: Request) -> dict:
 
     registry = getattr(request.app.state, "registry", None)
     if registry is None:
-        raise HTTPException(status_code=503, detail={"error": "registry unavailable; check /api/config/registry"})
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "registry unavailable; check /api/config/registry"},
+        )
 
     try:
         return analyze(data, registry=registry)

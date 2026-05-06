@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tongue_backend.stores.paths import PROMPT_DEFAULT, PROMPT_CURRENT
+from tongue_backend.models import ConfigStatus
+from tongue_backend.stores.paths import PROMPT_CURRENT, PROMPT_DEFAULT
 
 
 def _ensure_current() -> Path:
@@ -28,10 +29,10 @@ def reset() -> None:
     save(PROMPT_DEFAULT.read_text())
 
 
-def status() -> dict:
+def status() -> ConfigStatus:
     content = load_current()
-    return {
-        "content": content,
-        "is_default": content == PROMPT_DEFAULT.read_text(),
-        "mtime": PROMPT_CURRENT.stat().st_mtime,
-    }
+    return ConfigStatus(
+        content=content,
+        is_default=content == PROMPT_DEFAULT.read_text(),
+        mtime=PROMPT_CURRENT.stat().st_mtime,
+    )

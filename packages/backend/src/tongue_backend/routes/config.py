@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
 
+from tongue_backend.models import ConfigStatus, PutBody, ReloadResult
 from tongue_backend.stores import llm_store, prompt_store, registry_store
 
 
 router = APIRouter(prefix="/api/config", tags=["config"])
-
-
-class _PutBody(BaseModel):
-    content: str
 
 
 # Map {section} → (status_fn, save_fn, reset_fn)
@@ -29,10 +25,10 @@ def _resolve(section: str):
     return _SECTIONS[section]
 
 
-@router.post("/registry/reload")
-def reload_registry(request: Request):
+@router.post("/registry/reload", response_model=ReloadResult)
+def reload_registry(request: Request) -> ReloadResult:
     """Re-init ONNX sessions in-process. All-or-rollback on total failure."""
-    from tongue_ai import load_registry, RegistryError
+    from tongue_ai import RegistryError, load_registry
 
     previous = getattr(request.app.state, "registry", None)
     # Ensure the 'current' YAML exists (copies from default if missing).
@@ -46,21 +42,21 @@ def reload_registry(request: Request):
         raise HTTPException(status_code=422, detail={"error": str(e)})
 
     request.app.state.registry = new_registry
-    return {
-        "loaded": [h.name for h in new_registry.heads],
-        "failed": [],
-        "previous_kept": previous is not None,
-    }
+    return ReloadResult(
+        loaded=[h.name for h in new_registry.heads],
+        failed=[],
+        previous_kept=previous is not None,
+    )
 
 
-@router.get("/{section}")
-def get_section(section: str):
+@router.get("/{section}", response_model=ConfigStatus)
+def get_section(section: str) -> ConfigStatus:
     status_fn, _, _ = _resolve(section)
     return status_fn()
 
 
 @router.put("/{section}")
-def put_section(section: str, body: _PutBody):
+def put_section(section: str, body: PutBody) -> dict:
     _, save_fn, _ = _resolve(section)
     try:
         save_fn(body.content)
@@ -70,7 +66,7 @@ def put_section(section: str, body: _PutBody):
 
 
 @router.post("/{section}/reset")
-def reset_section(section: str):
+def reset_section(section: str) -> dict:
     _, _, reset_fn = _resolve(section)
     reset_fn()
     return {"ok": True}

@@ -1,6 +1,9 @@
-"""Thin wrapper around Google ADK so the rest of the code can call run(system, user, config)."""
+"""Thin wrapper around Google ADK — call run(system, user, config) → text."""
 
 from __future__ import annotations
+
+from tongue_backend.models import LLMConfig
+
 
 ERROR_STAMP = "⚠ 醫師建議產生失敗："
 
@@ -19,14 +22,15 @@ def _make_agent(*, model: str, instructions: str, temperature: float,
     )
 
 
-def run(*, system: str, user: str, config: dict) -> str:
+def run(*, system: str, user: str, config: LLMConfig) -> str:
+    """Call Gemini through ADK with the locked system prompt + user message."""
     try:
         agent = _make_agent(
-            model=config["model"],
+            model=config.model,
             instructions=system,
-            temperature=float(config.get("temperature", 0.2)),
-            max_tokens=int(config.get("max_tokens", 1024)),
-            top_p=float(config.get("top_p", 0.9)),
+            temperature=config.temperature,
+            max_tokens=config.max_tokens,
+            top_p=config.top_p,
         )
         text = agent.run(user)
     except Exception as exc:

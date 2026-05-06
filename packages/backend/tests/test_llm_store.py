@@ -17,14 +17,14 @@ def tmp_paths(tmp_path, monkeypatch):
 
 def test_load_current_copies_default_when_missing(tmp_paths):
     cfg = llm_store.load_current()
-    assert cfg["model"] == "gemini-2.0-flash"
-    assert cfg["temperature"] == 0.2
+    assert cfg.model == "gemini-2.0-flash"
+    assert cfg.temperature == 0.2
 
 
 def test_save_then_load_round_trip(tmp_paths):
     llm_store.save("model: gemini-2.0-pro\ntemperature: 0.5\nmax_tokens: 1024\ntop_p: 0.9\n")
     cfg = llm_store.load_current()
-    assert cfg["model"] == "gemini-2.0-pro"
+    assert cfg.model == "gemini-2.0-pro"
 
 
 def test_save_rejects_invalid_temperature(tmp_paths):
@@ -49,4 +49,4 @@ def test_reset_restores_default(tmp_paths):
     llm_store.save("model: x\ntemperature: 0.5\nmax_tokens: 1024\ntop_p: 0.9\n")
     llm_store.reset()
     cfg = llm_store.load_current()
-    assert cfg["model"] == "gemini-2.0-flash"
+    assert cfg.model == "gemini-2.0-flash"

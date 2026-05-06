@@ -6,16 +6,17 @@ from fastapi import APIRouter, Request
 
 from tongue_ai import __version__ as ai_version
 
+from tongue_backend.models import HealthResponse
+
 
 router = APIRouter(tags=["health"])
 
 
-@router.get("/health")
-def health(request: Request) -> dict:
+@router.get("/health", response_model=HealthResponse)
+def health(request: Request) -> HealthResponse:
     reg = getattr(request.app.state, "registry", None)
-    return {
-        "status": "ok",
-        "ai_version": ai_version,
-        "registry_loaded": reg is not None,
-        "heads_loaded": [h.name for h in reg.heads] if reg is not None else [],
-    }
+    return HealthResponse(
+        ai_version=ai_version,
+        registry_loaded=reg is not None,
+        heads_loaded=[h.name for h in reg.heads] if reg is not None else [],
+    )

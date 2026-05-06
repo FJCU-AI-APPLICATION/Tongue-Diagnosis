@@ -36,8 +36,8 @@ def test_reset_overwrites_current_with_default(tmp_paths):
 def test_status_reports_is_default_flag(tmp_paths):
     prompt_store.reset()
     status = prompt_store.status()
-    assert status["is_default"] is True
+    assert status.is_default is True
     prompt_store.save("MY EDIT")
     status = prompt_store.status()
-    assert status["is_default"] is False
-    assert status["content"] == "MY EDIT"
+    assert status.is_default is False
+    assert status.content == "MY EDIT"

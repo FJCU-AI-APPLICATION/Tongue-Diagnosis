@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import time
-from dataclasses import asdict
-from typing import Any
 
 import cv2
 import numpy as np
 
 from tongue_ai import detect_tongue, run_all
-from tongue_ai.types import HeadResult
 
 from tongue_backend.llm import client, user_message
+from tongue_backend.models import AnalyzeResponse, LLMConfig, TimingMs
 from tongue_backend.stores import llm_store, prompt_store
 
 
@@ -23,12 +21,12 @@ class ImageDecodeError(ValueError):
     """Raised when input bytes cannot be decoded as an image."""
 
 
-# Indirections so tests can monkeypatch the FS reads without touching disk
+# Indirections so tests can monkeypatch the FS reads without touching disk.
 def _load_prompt() -> str:
     return prompt_store.load_current()
 
 
-def _load_llm_config() -> dict:
+def _load_llm_config() -> LLMConfig:
     return llm_store.load_current()
 
 
@@ -40,27 +38,21 @@ def _decode_bgr(image_bytes: bytes) -> np.ndarray:
     return img
 
 
-def _serialise_heads(heads: list[HeadResult]) -> list[dict]:
-    return [asdict(h) for h in heads]
-
-
-def analyze(image_bytes: bytes, *, registry) -> dict[str, Any]:
+def analyze(image_bytes: bytes, *, registry) -> AnalyzeResponse:
     """Run the full analysis pipeline. ``registry`` is injected by the caller
     (the route reads ``request.app.state.registry``)."""
-    timing: dict[str, int] = {}
     t0 = time.perf_counter()
-
     image = _decode_bgr(image_bytes)
-    timing["decode"] = int((time.perf_counter() - t0) * 1000)
+    decode_ms = int((time.perf_counter() - t0) * 1000)
 
     t1 = time.perf_counter()
     bbox = detect_tongue(image, getattr(registry, "detector", None))
     roi = image if bbox is None else image[bbox.y:bbox.y + bbox.h, bbox.x:bbox.x + bbox.w]
-    timing["detect"] = int((time.perf_counter() - t1) * 1000)
+    detect_ms = int((time.perf_counter() - t1) * 1000)
 
     t2 = time.perf_counter()
     heads = run_all(roi, registry)
-    timing["infer"] = int((time.perf_counter() - t2) * 1000)
+    infer_ms = int((time.perf_counter() - t2) * 1000)
 
     user_msg = user_message.build(heads)
     system = _load_prompt()
@@ -68,13 +60,19 @@ def analyze(image_bytes: bytes, *, registry) -> dict[str, Any]:
 
     t3 = time.perf_counter()
     comment = client.run(system=system, user=user_msg, config=llm_cfg)
-    timing["llm"] = int((time.perf_counter() - t3) * 1000)
-    timing["total"] = int((time.perf_counter() - t0) * 1000)
+    llm_ms = int((time.perf_counter() - t3) * 1000)
+    total_ms = int((time.perf_counter() - t0) * 1000)
 
-    return {
-        "user_message": user_msg,
-        "heads": _serialise_heads(heads),
-        "comment": comment,
-        "disclaimer": DISCLAIMER,
-        "timing_ms": timing,
-    }
+    return AnalyzeResponse(
+        user_message=user_msg,
+        heads=heads,
+        comment=comment,
+        disclaimer=DISCLAIMER,
+        timing_ms=TimingMs(
+            decode=decode_ms,
+            detect=detect_ms,
+            infer=infer_ms,
+            llm=llm_ms,
+            total=total_ms,
+        ),
+    )

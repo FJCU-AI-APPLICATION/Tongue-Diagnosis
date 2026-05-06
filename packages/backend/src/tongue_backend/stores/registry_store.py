@@ -11,7 +11,8 @@ from pathlib import Path
 
 import yaml
 
-from tongue_backend.stores.paths import REGISTRY_DEFAULT, REGISTRY_CURRENT
+from tongue_backend.models import ConfigStatus
+from tongue_backend.stores.paths import REGISTRY_CURRENT, REGISTRY_DEFAULT
 
 
 class ValidationError(ValueError):
@@ -42,13 +43,13 @@ def reset() -> None:
     REGISTRY_CURRENT.write_text(REGISTRY_DEFAULT.read_text())
 
 
-def status() -> dict:
+def status() -> ConfigStatus:
     content = load_current_text()
-    return {
-        "content": content,
-        "is_default": content == REGISTRY_DEFAULT.read_text(),
-        "mtime": REGISTRY_CURRENT.stat().st_mtime,
-    }
+    return ConfigStatus(
+        content=content,
+        is_default=content == REGISTRY_DEFAULT.read_text(),
+        mtime=REGISTRY_CURRENT.stat().st_mtime,
+    )
 
 
 def _validate(content: str) -> None:

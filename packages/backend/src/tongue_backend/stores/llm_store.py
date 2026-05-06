@@ -1,12 +1,14 @@
-"""LLM config: YAML I/O + validation + reset."""
+"""LLM config: YAML I/O + validation + reset, returning typed ``LLMConfig``."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 import yaml
+from pydantic import ValidationError as PydanticValidationError
 
-from tongue_backend.stores.paths import LLM_DEFAULT, LLM_CURRENT
+from tongue_backend.models import ConfigStatus, LLMConfig
+from tongue_backend.stores.paths import LLM_CURRENT, LLM_DEFAULT
 
 
 class ValidationError(ValueError):
@@ -20,49 +22,42 @@ def _ensure_current() -> Path:
     return LLM_CURRENT
 
 
-def load_current() -> dict:
-    text = _ensure_current().read_text()
-    return yaml.safe_load(text) or {}
+def load_current() -> LLMConfig:
+    return _validate(_ensure_current().read_text())
 
 
-def save(content: str) -> None:
-    """Persist a YAML string after validation."""
-    parsed = _validate(content)
+def save(content: str) -> LLMConfig:
+    """Persist a YAML string after validation. Returns the parsed config."""
+    cfg = _validate(content)
     LLM_CURRENT.parent.mkdir(parents=True, exist_ok=True)
     LLM_CURRENT.write_text(content)
-    return parsed
+    return cfg
 
 
 def reset() -> None:
     LLM_CURRENT.write_text(LLM_DEFAULT.read_text())
 
 
-def status() -> dict:
+def status() -> ConfigStatus:
     content = _ensure_current().read_text()
-    return {
-        "content": content,
-        "is_default": content == LLM_DEFAULT.read_text(),
-        "mtime": LLM_CURRENT.stat().st_mtime,
-    }
+    return ConfigStatus(
+        content=content,
+        is_default=content == LLM_DEFAULT.read_text(),
+        mtime=LLM_CURRENT.stat().st_mtime,
+    )
 
 
-def _validate(content: str) -> dict:
+def _validate(content: str) -> LLMConfig:
     try:
         data = yaml.safe_load(content)
     except yaml.YAMLError as e:
         raise ValidationError(f"yaml parse error: {e}") from e
     if not isinstance(data, dict):
         raise ValidationError("LLM config root must be a mapping")
-    model = data.get("model")
-    if not isinstance(model, str) or not model.strip():
-        raise ValidationError("model must be a non-empty string")
-    temp = data.get("temperature", 0.0)
-    if not isinstance(temp, (int, float)) or not 0 <= temp <= 2:
-        raise ValidationError("temperature must be a number in [0, 2]")
-    max_tokens = data.get("max_tokens", 1024)
-    if not isinstance(max_tokens, int) or max_tokens <= 0:
-        raise ValidationError("max_tokens must be a positive integer")
-    top_p = data.get("top_p", 1.0)
-    if not isinstance(top_p, (int, float)) or not 0 < top_p <= 1:
-        raise ValidationError("top_p must be in (0, 1]")
-    return data
+    try:
+        return LLMConfig.model_validate(data)
+    except PydanticValidationError as e:
+        # Surface a single-line, field-prefixed message for the API caller.
+        first = e.errors()[0]
+        loc = ".".join(str(part) for part in first["loc"])
+        raise ValidationError(f"{loc}: {first['msg']}") from e
