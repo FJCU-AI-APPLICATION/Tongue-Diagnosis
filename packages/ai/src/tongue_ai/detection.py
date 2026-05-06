@@ -1,30 +1,20 @@
-"""Tongue detection: locates tongue region in an image."""
+"""Tongue ROI detection — pluggable detector abstraction."""
 
 from __future__ import annotations
 
+from typing import Callable, Optional
+
 import numpy as np
-import cv2
+
+from tongue_ai.types import BBox
 
 
-def detect_tongue(image: np.ndarray) -> dict:
-    """Detect tongue region in the input image.
+Detector = Callable[[np.ndarray], Optional[BBox]]
 
-    Parameters
-    ----------
-    image : np.ndarray
-        BGR image as loaded by OpenCV.
 
-    Returns
-    -------
-    dict
-        Bounding box with keys: x, y, w, h, confidence.
-    """
-    h, w = image.shape[:2]
-    # Placeholder: return center crop as "detected" region
-    return {
-        "x": w // 4,
-        "y": h // 4,
-        "w": w // 2,
-        "h": h // 2,
-        "confidence": 0.95,
-    }
+def detect_tongue(image: np.ndarray, detector: Detector | None) -> BBox | None:
+    """Run the configured detector. Returns None when no detector is wired up,
+    so the pipeline falls back to using the whole image."""
+    if detector is None:
+        return None
+    return detector(image)
