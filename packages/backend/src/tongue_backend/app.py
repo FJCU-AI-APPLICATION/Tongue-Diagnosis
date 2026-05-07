@@ -12,6 +12,7 @@ from tongue_backend.routes.analyze import router as analyze_router
 from tongue_backend.routes.api_key import router as api_key_router
 from tongue_backend.routes.config import router as config_router
 from tongue_backend.routes.health import router as health_router
+from tongue_backend.routes.llm import router as llm_router
 from tongue_backend.stores import llm_store, prompt_store, registry_store
 from tongue_backend.stores.paths import REGISTRY_CURRENT
 
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
     # /{section} catch-all on /api/config, which would otherwise shadow /api/config/api_key.
     app.include_router(api_key_router)
     app.include_router(config_router)
+    app.include_router(llm_router)
     app.state.registry = None
 
     @app.exception_handler(HTTPException)
