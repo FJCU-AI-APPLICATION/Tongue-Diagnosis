@@ -120,3 +120,47 @@ def test_live_test_wraps_load_llm_config_failure(monkeypatch):
         secrets_store._live_test("AIzaSyD_example_key_value_xyz_123")
     assert "FileNotFoundError" in str(e.value)
     assert "llm.current.yaml missing" in str(e.value)
+
+
+import os
+
+
+def test_save_happy_path_writes_0600(tmp_secret, monkeypatch):
+    monkeypatch.setattr(secrets_store, "_live_test", lambda _k: None)
+    secrets_store.save("AIzaSyD_example_key_value_xyz_123")
+    assert tmp_secret.read_text() == "AIzaSyD_example_key_value_xyz_123"
+    mode = tmp_secret.stat().st_mode & 0o777
+    assert mode == 0o600
+
+
+def test_save_rejects_bad_format_without_calling_live_test(tmp_secret, monkeypatch):
+    called = {"n": 0}
+
+    def boom(_k):
+        called["n"] += 1
+    monkeypatch.setattr(secrets_store, "_live_test", boom)
+
+    with pytest.raises(secrets_store.ValidationError):
+        secrets_store.save("short")
+    assert called["n"] == 0
+    assert tmp_secret.exists() is False
+
+
+def test_save_does_not_persist_when_live_test_fails(tmp_secret, monkeypatch):
+    def boom(_k):
+        raise secrets_store.LiveTestError("ValueError: bad key")
+    monkeypatch.setattr(secrets_store, "_live_test", boom)
+
+    with pytest.raises(secrets_store.LiveTestError):
+        secrets_store.save("AIzaSyD_example_key_value_xyz_123")
+    assert tmp_secret.exists() is False
+
+
+def test_save_creates_parent_dir(tmp_path, monkeypatch):
+    secrets_dir = tmp_path / "deep" / "secrets"
+    monkeypatch.setattr(secrets_store, "SECRETS_DIR", secrets_dir)
+    monkeypatch.setattr(secrets_store, "GEMINI_API_KEY_FILE", secrets_dir / "gemini_api_key")
+    monkeypatch.setattr(secrets_store, "_live_test", lambda _k: None)
+
+    secrets_store.save("AIzaSyD_example_key_value_xyz_123")
+    assert (secrets_dir / "gemini_api_key").exists()

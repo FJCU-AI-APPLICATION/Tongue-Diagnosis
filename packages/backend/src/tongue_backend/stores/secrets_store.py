@@ -87,3 +87,16 @@ def _live_test(key: str) -> None:
         )
     except Exception as exc:
         raise LiveTestError(f"{type(exc).__name__}: {exc}") from exc
+
+
+def save(content: str) -> None:
+    """Validate format → live-test against Gemini → write 0o600.
+
+    Raises ``ValidationError`` on format failure, ``LiveTestError`` on Gemini
+    failure. The file is NOT written in either failure case.
+    """
+    candidate = _validate_format(content)
+    _live_test(candidate)
+    SECRETS_DIR.mkdir(parents=True, exist_ok=True)
+    GEMINI_API_KEY_FILE.write_text(candidate)
+    GEMINI_API_KEY_FILE.chmod(0o600)
