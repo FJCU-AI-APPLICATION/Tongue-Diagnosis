@@ -62,3 +62,8 @@ class AnalyzeResponse(BaseModel):
     comment: str
     disclaimer: str
     timing_ms: TimingMs
+
+
+class ApiKeyStatus(BaseModel):
+    is_set: bool
+    fingerprint: str | None = None
