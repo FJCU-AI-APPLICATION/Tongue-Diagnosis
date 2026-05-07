@@ -1,5 +1,7 @@
 # Tongue Diagnosis POC Implementation Plan
 
+> **Status:** Executed via PRs #1 + #2 (merged 2026-05-06). Subsequently extended by PR #4 — see [`2026-05-07-merge-amanda-resnet50-design.md`](../specs/2026-05-07-merge-amanda-resnet50-design.md) for the deltas (PyTorch composite heads, HF Hub weight delivery, `category_map` for the user-message splitter). The default `registry.default.yaml` no longer matches this plan's "11 per-task ONNX heads" target — it ships Amanda's two PyTorch composite heads instead. The ONNX path remains supported per-head but is dormant.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build an end-to-end POC where a user captures or uploads a tongue image in a Gradio UI, the FastAPI backend runs per-task ONNX classifiers and calls Gemini via Google ADK to produce a TCM doctor comment, and all runtime configuration (system prompt, LLM params, model registry) is editable from the same UI.
