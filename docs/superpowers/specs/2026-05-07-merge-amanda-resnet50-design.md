@@ -316,15 +316,15 @@ The spec's test plan stands. Additions:
 
 ## 14. PR commit sequence
 
-The merge lands as one PR on branch `feat/merge-amanda-resnet50`, structured as a sequence of focused commits:
+The merge lands as one PR on branch `feat/merge-amanda-resnet50`. This spec is the branch's first commit; the implementation plan (commit #1 below) is added via `superpowers:writing-plans`. Subsequent commits implement the plan:
 
-1. **chore: clean handoff folder + working-tree noise** — delete `ResNet50測試模型權重檔V1_Amanda/`, `frontend/.../test.md`; revert the stray `cv2` import edit in `detection.py`.
-2. **docs: add merge spec + new implementation plan** — this document plus the plan derived from it via `superpowers:writing-plans`.
+1. **docs: add implementation plan** — the plan derived from this spec.
+2. **chore: clean handoff folder + working-tree noise** — delete `ResNet50測試模型權重檔V1_Amanda/` *after* the two `.pth` files have been uploaded to HF Hub; delete `frontend/.../test.md`; revert the stray `cv2` import edit in `detection.py`.
 3. **chore(ai): drop onnxruntime, add huggingface_hub, add [training] extra** — `pyproject.toml` only.
 4. **feat(ai): WeightSource (hf:// + local:) + types/preprocessing** — small, testable.
 5. **feat(ai): PyTorchTaskHead + registry YAML loader + run_all** — replaces the stub modules.
 6. **feat(ai): training subpackage** — Amanda's scripts cleaned + extracted dataset/evaluate.
-7. **feat(backend): pipeline + stores + user_message with category_map splitter** — most of the spec's Phase 2.
+7. **feat(backend): pipeline + stores + user_message with category_map splitter** — most of the prior spec's Phase 2.
 8. **feat(backend): ADK client + locked prompt + config endpoints** — last backend piece.
 9. **feat(frontend): Gradio four-tab UI** — Streamlit removed.
 10. **chore: smoke script, README updates, .env.example** — final polish.
