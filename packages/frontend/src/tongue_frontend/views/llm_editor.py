@@ -34,7 +34,7 @@ def _reset() -> tuple[str, str]:
 
 def build() -> gr.Blocks:
     with gr.Blocks() as view:
-        gr.Markdown("### LLM 設定 (Gemini via ADK)")
+        gr.Markdown("### LLM 設定 (Gemini)")
         gr.Markdown("以 YAML 編輯：`model`, `temperature` ∈ [0,2], `max_tokens` > 0, `top_p` ∈ (0,1].")
         textbox = gr.Code(language="yaml", label="llm.yaml", lines=10)
         with gr.Row():
