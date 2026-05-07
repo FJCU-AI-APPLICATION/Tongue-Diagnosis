@@ -18,6 +18,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+training = [
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+]
 
 [build-system]
 requires = ["hatchling"]
