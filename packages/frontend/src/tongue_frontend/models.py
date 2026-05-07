@@ -62,3 +62,16 @@ class AnalyzeResponse(BaseModel):
     comment: str
     disclaimer: str
     timing_ms: TimingMs
+
+
+class ApiKeyStatus(BaseModel):
+    """Returned by ``/api/config/api_key`` endpoints. Never includes the key."""
+
+    is_set: bool
+    fingerprint: str | None = None
+
+
+class LLMModelsResponse(BaseModel):
+    """Returned by ``GET /api/llm/models``."""
+
+    models: list[str]

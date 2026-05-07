@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 
 from tongue_backend.models import AnalyzeResponse
 from tongue_backend.pipeline import ImageDecodeError, analyze
@@ -28,6 +29,6 @@ async def api_analyze(file: UploadFile, request: Request) -> AnalyzeResponse:
         )
 
     try:
-        return analyze(data, registry=registry)
+        return await run_in_threadpool(analyze, data, registry=registry)
     except ImageDecodeError as e:
         raise HTTPException(status_code=400, detail={"error": str(e)})

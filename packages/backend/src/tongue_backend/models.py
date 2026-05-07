@@ -58,7 +58,7 @@ class ConfigStatus(BaseModel):
 
 
 class PutBody(BaseModel):
-    """Request body for ``PUT /api/config/{section}``."""
+    """Request body for ``PUT /api/config/{section}`` and ``PUT /api/config/api_key``."""
 
     content: str
 
@@ -111,3 +111,26 @@ class AnalyzeResponse(BaseModel):
     disclaimer: str
     category_map: dict[str, dict[str, str]] = Field(default_factory=dict)
     timing_ms: TimingMs
+
+
+# --- API key (operator-set Gemini key) --------------------------------------
+
+
+class ApiKeyStatus(BaseModel):
+    """Returned by ``/api/config/api_key`` endpoints. Never includes the key."""
+
+    is_set: bool
+    fingerprint: str | None = None
+
+
+# --- LLM model discovery ----------------------------------------------------
+
+
+class LLMModelsResponse(BaseModel):
+    """Returned by ``GET /api/llm/models`` — Gemini model IDs that support
+    ``generateContent``. Plain ``id`` is the bare name (e.g. ``gemini-2.5-flash``)
+    suitable for the ``model:`` field in ``llm.yaml``; full ``models/...`` form
+    is in ``name`` for completeness.
+    """
+
+    models: list[str]

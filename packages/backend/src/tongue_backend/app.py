@@ -9,8 +9,10 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 
 from tongue_backend.routes.analyze import router as analyze_router
+from tongue_backend.routes.api_key import router as api_key_router
 from tongue_backend.routes.config import router as config_router
 from tongue_backend.routes.health import router as health_router
+from tongue_backend.routes.llm import router as llm_router
 from tongue_backend.stores import llm_store, prompt_store, registry_store
 from tongue_backend.stores.paths import REGISTRY_CURRENT
 
@@ -22,7 +24,11 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Tongue Diagnosis API", version="0.1.0")
     app.include_router(health_router)
     app.include_router(analyze_router)
+    # api_key_router must be registered BEFORE config_router — config_router has
+    # /{section} catch-all on /api/config, which would otherwise shadow /api/config/api_key.
+    app.include_router(api_key_router)
     app.include_router(config_router)
+    app.include_router(llm_router)
     app.state.registry = None
 
     @app.exception_handler(HTTPException)

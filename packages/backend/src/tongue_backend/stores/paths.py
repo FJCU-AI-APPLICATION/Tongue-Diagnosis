@@ -16,3 +16,6 @@ LLM_CURRENT = _BACKEND_ROOT / "config" / "llm.current.yaml"
 
 REGISTRY_DEFAULT = _BACKEND_ROOT / "config" / "registry.default.yaml"
 REGISTRY_CURRENT = _BACKEND_ROOT / "config" / "registry.current.yaml"
+
+SECRETS_DIR = _BACKEND_ROOT / "secrets"
+GEMINI_API_KEY_FILE = SECRETS_DIR / "gemini_api_key"

@@ -1,4 +1,11 @@
-"""Gradio app — four tabs: 舌診分析 / 提示詞設定 / LLM 設定 / 模型設定."""
+"""Gradio app — two tabs: 舌診分析 / 設定 (three accordions inside).
+
+Gradio 6.14 has a Svelte ``effect_update_depth_exceeded`` regression that
+fires on initial render whenever ≥3 sibling ``gr.Tab`` items each contain a
+nested ``gr.Blocks()``. The settings tabs are consolidated into one tab with
+``gr.Accordion`` sections, and each view's ``build()`` no longer wraps its
+components in a nested ``gr.Blocks()``.
+"""
 
 from __future__ import annotations
 
@@ -13,13 +20,14 @@ def build_app() -> gr.Blocks:
         gr.Markdown("# 舌診 POC")
         with gr.Tabs():
             with gr.Tab("舌診分析"):
-                analyze.build()
-            with gr.Tab("提示詞設定"):
-                prompt_editor.build()
-            with gr.Tab("LLM 設定"):
-                llm_editor.build()
-            with gr.Tab("模型設定"):
-                registry_editor.build()
+                analyze.build(app)
+            with gr.Tab("設定"):
+                with gr.Accordion("LLM 設定 (Gemini API key + model)", open=True):
+                    llm_editor.build(app)
+                with gr.Accordion("提示詞 (System prompt)", open=False):
+                    prompt_editor.build(app)
+                with gr.Accordion("模型 (Registry)", open=False):
+                    registry_editor.build(app)
     return app
 
 

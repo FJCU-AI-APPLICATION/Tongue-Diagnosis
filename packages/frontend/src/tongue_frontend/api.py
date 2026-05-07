@@ -11,8 +11,10 @@ import httpx
 
 from tongue_frontend.models import (
     AnalyzeResponse,
+    ApiKeyStatus,
     ConfigStatus,
     HealthResponse,
+    LLMModelsResponse,
     ReloadResult,
 )
 from tongue_frontend.settings import settings
@@ -61,3 +63,31 @@ def health() -> HealthResponse:
         r = c.get("/health")
         r.raise_for_status()
         return HealthResponse.model_validate(r.json())
+
+
+def get_api_key_status() -> ApiKeyStatus:
+    with _client() as c:
+        r = c.get("/api/config/api_key")
+        r.raise_for_status()
+        return ApiKeyStatus.model_validate(r.json())
+
+
+def put_api_key(content: str) -> ApiKeyStatus:
+    with _client() as c:
+        r = c.put("/api/config/api_key", json={"content": content})
+        r.raise_for_status()
+        return ApiKeyStatus.model_validate(r.json())
+
+
+def clear_api_key() -> ApiKeyStatus:
+    with _client() as c:
+        r = c.delete("/api/config/api_key")
+        r.raise_for_status()
+        return ApiKeyStatus.model_validate(r.json())
+
+
+def list_llm_models() -> LLMModelsResponse:
+    with _client() as c:
+        r = c.get("/api/llm/models")
+        r.raise_for_status()
+        return LLMModelsResponse.model_validate(r.json())
