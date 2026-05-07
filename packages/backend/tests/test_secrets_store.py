@@ -45,3 +45,26 @@ def test_clear_is_idempotent(tmp_secret):
     secrets_store.clear()
     assert tmp_secret.exists() is False
     secrets_store.clear()  # again: still no-op
+
+
+def test_validate_format_strips_and_returns_value():
+    assert secrets_store._validate_format("  AIzaSyD_example_key_value_xyz_123  ") == \
+        "AIzaSyD_example_key_value_xyz_123"
+
+
+def test_validate_format_rejects_empty():
+    with pytest.raises(secrets_store.ValidationError) as e:
+        secrets_store._validate_format("")
+    assert "金鑰格式不合法" in str(e.value)
+
+
+def test_validate_format_rejects_short():
+    with pytest.raises(secrets_store.ValidationError) as e:
+        secrets_store._validate_format("short")
+    assert "金鑰格式不合法" in str(e.value)
+
+
+def test_validate_format_rejects_bad_chars():
+    with pytest.raises(secrets_store.ValidationError) as e:
+        secrets_store._validate_format("AIzaSyD_with spaces_and_$ymbols_xyz")
+    assert "金鑰格式不合法" in str(e.value)

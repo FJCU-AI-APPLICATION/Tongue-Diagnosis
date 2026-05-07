@@ -4,8 +4,29 @@ from __future__ import annotations
 
 import hashlib
 
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ValidationError as PydanticValidationError
+
 from tongue_backend.models import ApiKeyStatus
 from tongue_backend.stores.paths import GEMINI_API_KEY_FILE, SECRETS_DIR
+
+
+class ValidationError(ValueError):
+    """Raised on PUT when the key shape is invalid."""
+
+
+class _ApiKeyValue(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    value: str = Field(min_length=20, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+def _validate_format(content: str) -> str:
+    """Return the stripped/validated key. Raises ValidationError on bad shape."""
+    try:
+        return _ApiKeyValue(value=content).value
+    except PydanticValidationError as e:
+        first = e.errors()[0]
+        raise ValidationError(f"金鑰格式不合法: {first['msg']}") from e
 
 
 def fingerprint(key: str) -> str:
