@@ -1,7 +1,8 @@
 # Tongue Diagnosis POC — Design
 
 **Date:** 2026-05-06
-**Status:** Design approved by user; pending implementation plan
+**Status:** Implemented via PRs #1 (`worktree-feat-tongue-poc`) and #2 (`refactor/typed-api-responses`).
+**Partially superseded by:** [`2026-05-07-merge-amanda-resnet50-design.md`](./2026-05-07-merge-amanda-resnet50-design.md) (PR #4, merge SHA `473e895`). The 11-per-task-ONNX-head architecture in §3 and §6 was replaced with two PyTorch composite heads served from Hugging Face Hub. ONNX support remains as a sibling backend, but the default `registry.default.yaml` no longer ships ONNX heads. See the 2026-05-07 spec for the post-merge architecture.
 **Stack:** Gradio (frontend) · FastAPI (backend) · ONNX Runtime + PyTorch (inference) · Google ADK → Gemini (LLM)
 
 ---
