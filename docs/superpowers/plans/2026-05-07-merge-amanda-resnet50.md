@@ -132,26 +132,23 @@ packages/frontend/tests/
 
 Run:
 ```bash
-git -C /home/daniel/Tongue-Diagnosis branch --show-current
-git -C /home/daniel/Tongue-Diagnosis log --oneline -5
+git branch --show-current
+git log --oneline -8
 ```
 
-Expected:
-```
-feat/merge-amanda-resnet50
-f404d2a Fix commit-sequence note in merge spec
-eeb430a Add merge design spec: Amanda's ResNet50 into Tongue-Diagnosis
-32e20a5 Add implementation plan for tongue diagnosis POC
-a9b1447 Add design spec for tongue diagnosis POC
-5b0ea6d Decouple frontend from backend via HTTP/SSE, add analysis API endpoints
-```
+Expected: branch is `feat/merge-amanda-resnet50`. Recent commits should include (from newest to oldest):
+- `chore: gitignore .claude/...`
+- `Add implementation plan for Amanda's ResNet50 merge`
+- `Fix commit-sequence note in merge spec`
+- `Add merge design spec: Amanda's ResNet50 into Tongue-Diagnosis`
+- prior `2026-05-06` design + plan commits + `Decouple frontend...`
 
 - [ ] **Step 2: Confirm spec and existing plan are present**
 
 Run:
 ```bash
-ls /home/daniel/Tongue-Diagnosis/docs/superpowers/specs/
-ls /home/daniel/Tongue-Diagnosis/docs/superpowers/plans/
+ls docs/superpowers/specs/
+ls docs/superpowers/plans/
 ```
 
 Expected (specs):
@@ -179,7 +176,7 @@ Expected: three `.pth` files (`best_resnet50.pth`, `best_resnet50_front.pth`, `b
 
 Run:
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv sync --all-packages
+uv sync --all-packages
 ```
 
 Expected: succeeds, installs torch/torchvision (CPU), fastapi, streamlit (will be removed later).
@@ -237,7 +234,7 @@ torchvision = { index = "pytorch-cpu" }
 
 Run:
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv sync --all-packages
+uv sync --all-packages
 ```
 
 Expected: pulls `huggingface_hub` and `pyyaml`. No errors.
@@ -246,7 +243,7 @@ Expected: pulls `huggingface_hub` and `pyyaml`. No errors.
 
 Run:
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai python -c "import huggingface_hub, yaml; print(huggingface_hub.__version__, yaml.__version__)"
+uv run --package tongue-ai python -c "import huggingface_hub, yaml; print(huggingface_hub.__version__, yaml.__version__)"
 ```
 
 Expected: prints two version strings, no traceback.
@@ -312,7 +309,7 @@ def test_bbox_holds_coordinates():
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_types.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_types.py -v
 ```
 
 Expected: ImportError ("cannot import name 'BBox' from 'tongue_ai.types'") because the module doesn't exist yet.
@@ -367,7 +364,7 @@ class HeadResult:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_types.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_types.py -v
 ```
 
 Expected: 5 passed.
@@ -456,7 +453,7 @@ def test_decode_bgr_raises_on_garbage():
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_preprocessing.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_preprocessing.py -v
 ```
 
 Expected: ImportError, module not found.
@@ -502,7 +499,7 @@ def normalise_imagenet(image_rgb: np.ndarray, n: Normalisation) -> np.ndarray:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_preprocessing.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_preprocessing.py -v
 ```
 
 Expected: 6 passed.
@@ -549,7 +546,7 @@ def test_detect_tongue_returns_whole_image_bbox_when_no_detector_arg():
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_detection.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_detection.py -v
 ```
 
 Expected: AssertionError or ImportError; current `detection.py` returns a dict, not a `BBox`.
@@ -579,7 +576,7 @@ def detect_tongue(image: np.ndarray, *, enabled: bool = False) -> BBox:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_detection.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_detection.py -v
 ```
 
 Expected: 2 passed.
@@ -694,7 +691,7 @@ def test_hf_uri_wraps_underlying_error(tmp_path):
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_weights.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_weights.py -v
 ```
 
 Expected: ImportError, module not found.
@@ -773,7 +770,7 @@ class WeightSource:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_weights.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_weights.py -v
 ```
 
 Expected: 9 passed.
@@ -909,7 +906,7 @@ def test_predict_records_error_in_head_result_on_failure(tmp_path: Path):
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_task_head.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_task_head.py -v
 ```
 
 Expected: ImportError.
@@ -1019,7 +1016,7 @@ def load_pytorch_head(cfg: dict[str, Any], weight_path: Path) -> PyTorchTaskHead
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_task_head.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_task_head.py -v
 ```
 
 Expected: 4 passed. (Note: builds two real resnet50 instances; expect ~10-30s on CPU.)
@@ -1166,7 +1163,7 @@ def test_load_registry_total_failure_raises_when_strict(tmp_path: Path):
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_registry.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_registry.py -v
 ```
 
 Expected: ImportError.
@@ -1288,7 +1285,7 @@ def load_registry(path: Path, *, raise_on_partial_fail: bool = True) -> Registry
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_registry.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_registry.py -v
 ```
 
 Expected: 6 passed.
@@ -1375,7 +1372,7 @@ def test_run_all_continues_after_a_head_raises():
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_inference.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_inference.py -v
 ```
 
 Expected: ImportError or AttributeError on `run_all`.
@@ -1414,7 +1411,7 @@ def run_all(image_bgr: np.ndarray, registry: Registry) -> list[HeadResult]:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_inference.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_inference.py -v
 ```
 
 Expected: 3 passed.
@@ -1436,8 +1433,8 @@ git commit -m "feat(ai): rewrite inference.run_all to iterate registry heads"
 - [ ] **Step 1: Delete stub modules**
 
 ```bash
-rm /home/daniel/Tongue-Diagnosis/packages/ai/src/tongue_ai/classification.py
-rm /home/daniel/Tongue-Diagnosis/packages/ai/src/tongue_ai/recognition.py
+rm packages/ai/src/tongue_ai/classification.py
+rm packages/ai/src/tongue_ai/recognition.py
 ```
 
 - [ ] **Step 2: Update `__init__.py` to expose the public API**
@@ -1483,7 +1480,7 @@ __all__ = [
 - [ ] **Step 3: Verify package still imports cleanly**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai python -c "import tongue_ai; print(tongue_ai.__version__, tongue_ai.__all__)"
+uv run --package tongue-ai python -c "import tongue_ai; print(tongue_ai.__version__, tongue_ai.__all__)"
 ```
 
 Expected: `0.2.0 ['BBox', 'ClassScore', ...]` printed; no traceback.
@@ -1491,7 +1488,7 @@ Expected: `0.2.0 ['BBox', 'ClassScore', ...]` printed; no traceback.
 - [ ] **Step 4: Run all AI tests to confirm green**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests -v
+uv run --package tongue-ai pytest packages/ai/tests -v
 ```
 
 Expected: all tests from Tasks 2–8 pass.
@@ -1573,7 +1570,7 @@ def test_dataset_len_matches_data_list_length(tmp_path: Path):
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_training_dataset.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_training_dataset.py -v
 ```
 
 Expected: ImportError; module doesn't exist.
@@ -1645,7 +1642,7 @@ class TongueDataset(Dataset):
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai pytest packages/ai/tests/test_training_dataset.py -v
+uv run --package tongue-ai pytest packages/ai/tests/test_training_dataset.py -v
 ```
 
 Expected: 3 passed.
@@ -1713,7 +1710,7 @@ def evaluate(
 - [ ] **Step 2: Verify import works (with training extra)**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv sync --all-packages --extra training
+uv sync --all-packages --extra training
 uv run --package tongue-ai python -c "from tongue_ai.training.evaluate import evaluate; print('ok')"
 ```
 
@@ -1920,7 +1917,7 @@ if __name__ == "__main__":
 - [ ] **Step 2: Verify entry point parses args**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai --extra training python -m tongue_ai.training.train_front --help
+uv run --package tongue-ai --extra training python -m tongue_ai.training.train_front --help
 ```
 
 Expected: argparse usage banner with `--labels-json`, `--img-dir`, `--weights-out`, etc.
@@ -2075,7 +2072,7 @@ if __name__ == "__main__":
 - [ ] **Step 2: Verify entry point parses args**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai --extra training python -m tongue_ai.training.train_sublingual --help
+uv run --package tongue-ai --extra training python -m tongue_ai.training.train_sublingual --help
 ```
 
 Expected: argparse usage banner.
@@ -2135,7 +2132,7 @@ Expected: `Both weights uploaded.` printed; both files visible at the repo URL.
 - [ ] **Step 4: Verify download path resolves**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-ai python -c "
+uv run --package tongue-ai python -c "
 import os
 from tongue_ai.weights import WeightSource
 from pathlib import Path
@@ -2180,7 +2177,7 @@ dependencies = [
 - [ ] **Step 2: Sync workspace**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv sync --all-packages
+uv sync --all-packages
 ```
 
 Expected: pulls `google-adk` and its dependencies. May take a minute.
@@ -2188,7 +2185,7 @@ Expected: pulls `google-adk` and its dependencies. May take a minute.
 - [ ] **Step 3: Verify imports**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend python -c "import yaml; import google.adk; print('ok')"
+uv run --package tongue-backend python -c "import yaml; import google.adk; print('ok')"
 ```
 
 Expected: `ok` printed. If `google.adk` import fails, note the actual SDK module name (could be `google_adk` or similar) and update the LLM client task accordingly.
@@ -2239,7 +2236,7 @@ REGISTRY_CURRENT = _BACKEND_ROOT / "config" / "registry.current.yaml"
 - [ ] **Step 2: Verify paths resolve correctly**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend python -c "
+uv run --package tongue-backend python -c "
 from tongue_backend.stores import paths
 print('prompt default:', paths.PROMPT_DEFAULT)
 print('llm default   :', paths.LLM_DEFAULT)
@@ -2351,7 +2348,7 @@ def test_is_default_when_current_matches_default(tmp_path: Path):
 - [ ] **Step 3: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_prompt_store.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_prompt_store.py -v
 ```
 
 Expected: ImportError.
@@ -2399,7 +2396,7 @@ class PromptStore:
 - [ ] **Step 5: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_prompt_store.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_prompt_store.py -v
 ```
 
 Expected: 4 passed.
@@ -2488,7 +2485,7 @@ def test_save_persists_valid_yaml(tmp_path: Path):
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_llm_store.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_llm_store.py -v
 ```
 
 Expected: ImportError.
@@ -2571,7 +2568,7 @@ class LLMStore:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_llm_store.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_llm_store.py -v
 ```
 
 Expected: 6 passed.
@@ -2680,7 +2677,7 @@ def test_reload_with_valid_weights_returns_loaded_registry(tmp_path: Path):
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_registry_store.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_registry_store.py -v
 ```
 
 Expected: ImportError.
@@ -2746,7 +2743,7 @@ class RegistryStore:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_registry_store.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_registry_store.py -v
 ```
 
 Expected: 5 passed.
@@ -2833,7 +2830,7 @@ Create `packages/backend/prompts/system.default.md`:
 - [ ] **Step 2: Verify file exists**
 
 ```bash
-wc -l /home/daniel/Tongue-Diagnosis/packages/backend/prompts/system.default.md
+wc -l packages/backend/prompts/system.default.md
 ```
 
 Expected: 50+ lines.
@@ -2940,7 +2937,7 @@ category_map:
 - [ ] **Step 2: Validate against the registry validator**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend python -c "
+uv run --package tongue-backend python -c "
 from pathlib import Path
 from tongue_ai.registry import validate_registry_yaml
 validate_registry_yaml(Path('packages/backend/config/registry.default.yaml'))
@@ -3066,7 +3063,7 @@ def test_class_not_in_category_map_is_skipped_silently():
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_user_message.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_user_message.py -v
 ```
 
 Expected: ImportError.
@@ -3130,7 +3127,7 @@ def build(
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_user_message.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_user_message.py -v
 ```
 
 Expected: 6 passed.
@@ -3205,7 +3202,7 @@ def test_run_raises_when_credentials_missing(monkeypatch):
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_llm_client.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_llm_client.py -v
 ```
 
 Expected: ImportError.
@@ -3288,7 +3285,7 @@ class LLMClient:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_llm_client.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_llm_client.py -v
 ```
 
 Expected: 4 passed.
@@ -3413,7 +3410,7 @@ def test_analyze_raises_value_error_on_undecodable_image():
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_pipeline.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_pipeline.py -v
 ```
 
 Expected: ImportError.
@@ -3517,7 +3514,7 @@ def analyze(
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_pipeline.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_pipeline.py -v
 ```
 
 Expected: 3 passed.
@@ -3596,7 +3593,7 @@ app = create_app()
 - [ ] **Step 2: Verify the app starts (will be exercised by route tests later)**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend python -c "
+uv run --package tongue-backend python -c "
 from tongue_backend.app import create_app
 app = create_app()
 print('app created with', len(app.routes), 'routes')
@@ -3659,7 +3656,7 @@ def test_health_when_registry_is_none():
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_routes_health.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_routes_health.py -v
 ```
 
 Expected: AssertionError; current health route doesn't expose registry summary.
@@ -3700,7 +3697,7 @@ async def health_check(request: Request) -> dict:
 - [ ] **Step 4: Run test to verify it passes**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_routes_health.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_routes_health.py -v
 ```
 
 Expected: 2 passed.
@@ -3806,7 +3803,7 @@ def test_analyze_returns_503_when_registry_missing():
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_routes_analyze.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_routes_analyze.py -v
 ```
 
 Expected: 4 failed (existing analyze route returns the old shape).
@@ -3859,7 +3856,7 @@ async def api_analyze(request: Request, file: UploadFile) -> dict:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_routes_analyze.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_routes_analyze.py -v
 ```
 
 Expected: 4 passed.
@@ -3995,7 +3992,7 @@ def test_post_registry_reload_returns_loaded_and_failed(wired_app, tmp_path: Pat
 - [ ] **Step 2: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_routes_config.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_routes_config.py -v
 ```
 
 Expected: ImportError on `tongue_backend.routes.config`.
@@ -4101,7 +4098,7 @@ async def reload_registry(request: Request) -> dict:
 - [ ] **Step 4: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-backend pytest packages/backend/tests/test_routes_config.py -v
+uv run --package tongue-backend pytest packages/backend/tests/test_routes_config.py -v
 ```
 
 Expected: 6 passed.
@@ -4172,7 +4169,7 @@ dependencies = [
 - [ ] **Step 2: Sync workspace**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv sync --all-packages
+uv sync --all-packages
 ```
 
 Expected: pulls gradio; removes streamlit on next resolve. (uv may keep streamlit cached; that's fine.)
@@ -4264,7 +4261,7 @@ def test_reload_registry_returns_loaded_failed():
 - [ ] **Step 3: Run tests to verify they fail**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-frontend --with respx pytest packages/frontend/tests/test_api.py -v
+uv run --package tongue-frontend --with respx pytest packages/frontend/tests/test_api.py -v
 ```
 
 Expected: ImportError on `tongue_frontend.api`.
@@ -4319,7 +4316,7 @@ class APIClient:
 - [ ] **Step 5: Run tests to verify they pass**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-frontend --with respx pytest packages/frontend/tests/test_api.py -v
+uv run --package tongue-frontend --with respx pytest packages/frontend/tests/test_api.py -v
 ```
 
 Expected: 5 passed.
@@ -4439,7 +4436,7 @@ def build_tab(client: APIClient) -> gr.Blocks:
 - [ ] **Step 3: Smoke import**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-frontend python -c "
+uv run --package tongue-frontend python -c "
 from tongue_frontend.views.analyze import build_tab
 from tongue_frontend.api import APIClient
 print('imports ok')
@@ -4635,7 +4632,7 @@ def build_tab(client: APIClient) -> gr.Blocks:
 - [ ] **Step 4: Smoke imports**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-frontend python -c "
+uv run --package tongue-frontend python -c "
 from tongue_frontend.views import prompt_editor, llm_editor, registry_editor
 print('imports ok')
 "
@@ -4706,7 +4703,7 @@ if __name__ == "__main__":
 - [ ] **Step 2: Smoke import**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run --package tongue-frontend python -c "
+uv run --package tongue-frontend python -c "
 from tongue_frontend.app import build_app
 build_app()
 print('app built')
@@ -4726,42 +4723,33 @@ git commit -m "feat(frontend): rewrite app.py as Gradio four-tab UI"
 
 ## Phase 8 — Cleanup, README, smoke test
 
-### Task 36: Delete handoff folder and working-tree noise
+### Task 36: Delete handoff folder and working-tree noise (filesystem cleanup, no commit)
 
-**Files:**
-- Delete: `ResNet50測試模型權重檔V1_Amanda/` (entire folder)
-- Delete: `packages/frontend/src/tongue_frontend/test.md`
-- Modify: `packages/ai/src/tongue_ai/detection.py` (the working-tree edit was reverted by Task 4's full rewrite, but make sure the file matches current source)
+**Note:** Both the Amanda folder and `test.md` are *untracked* files in the **main checkout** at `/home/daniel/Tongue-Diagnosis/`, not in this worktree. Removing them is a filesystem-only operation; no git commit is created on the feature branch (the deletions don't appear in the worktree's git state at all).
 
 > **Precondition:** Task 14 (HF Hub upload) is complete. The `.pth` files are uploaded; deleting the folder is now safe.
 
-- [ ] **Step 1: Delete the handoff folder**
+- [ ] **Step 1: Delete the handoff folder from the main checkout**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis
-rm -rf "ResNet50測試模型權重檔V1_Amanda"
+rm -rf "/home/daniel/Tongue-Diagnosis/ResNet50測試模型權重檔V1_Amanda"
 ```
 
-- [ ] **Step 2: Delete the unrelated test.md**
+- [ ] **Step 2: Delete the unrelated test.md from the main checkout**
 
 ```bash
 rm /home/daniel/Tongue-Diagnosis/packages/frontend/src/tongue_frontend/test.md
 ```
 
-- [ ] **Step 3: Verify git sees the deletions**
+- [ ] **Step 3: Confirm worktree git state is unchanged**
 
 ```bash
-git -C /home/daniel/Tongue-Diagnosis status
+git status
 ```
 
-Expected: `deleted: packages/frontend/src/tongue_frontend/test.md` and `ResNet50測試模型權重檔V1_Amanda/` no longer present (it was untracked, so just gone).
+Expected: no new entries from the cleanup (because both files were untracked in the main checkout and never existed in the worktree). Any unrelated in-progress changes still show as before.
 
-- [ ] **Step 4: Commit**
-
-```bash
-git add -A
-git commit -m "chore: drop Amanda handoff folder and unrelated frontend test.md"
-```
+(No commit step — there's nothing to commit.)
 
 ### Task 37: Update root README.md
 
@@ -4770,7 +4758,7 @@ git commit -m "chore: drop Amanda handoff folder and unrelated frontend test.md"
 
 - [ ] **Step 1: Replace README.md**
 
-Replace `/home/daniel/Tongue-Diagnosis/README.md` with:
+Replace `README.md` with:
 
 ```markdown
 # Tongue Diagnosis
@@ -4989,7 +4977,7 @@ git commit -m "docs: add manual smoke-test script"
 - [ ] **Step 1: Run all tests**
 
 ```bash
-cd /home/daniel/Tongue-Diagnosis && uv run pytest packages/ai/tests packages/backend/tests --with respx packages/frontend/tests -v
+uv run pytest packages/ai/tests packages/backend/tests --with respx packages/frontend/tests -v
 ```
 
 Expected: all tests pass. If any fail, fix in a focused commit before continuing.
@@ -4997,7 +4985,7 @@ Expected: all tests pass. If any fail, fix in a focused commit before continuing
 - [ ] **Step 2: Verify no Streamlit references remain**
 
 ```bash
-grep -rn streamlit /home/daniel/Tongue-Diagnosis/packages /home/daniel/Tongue-Diagnosis/README.md /home/daniel/Tongue-Diagnosis/docs/smoke-test.md || echo "no streamlit references — good"
+grep -rn streamlit packages docs/smoke-test.md README.md || echo "no streamlit references — good"
 ```
 
 Expected: only the line `no streamlit references — good`.
@@ -5026,7 +5014,7 @@ If both succeed, the merge is functionally complete.
 - [ ] **Step 1: Confirm branch state**
 
 ```bash
-git -C /home/daniel/Tongue-Diagnosis log --oneline main..HEAD | wc -l
+git log --oneline main..HEAD | wc -l
 ```
 
 Expected: ≥ 30 commits (1 spec + 1 spec-fix + ~30 from this plan).
@@ -5034,7 +5022,7 @@ Expected: ≥ 30 commits (1 spec + 1 spec-fix + ~30 from this plan).
 - [ ] **Step 2: Push to origin**
 
 ```bash
-git -C /home/daniel/Tongue-Diagnosis push -u origin feat/merge-amanda-resnet50
+git push -u origin feat/merge-amanda-resnet50
 ```
 
 - [ ] **Step 3: Open the PR**
