@@ -208,3 +208,8 @@ __marimo__/
 
 # Claude Code (plugin cache, worktrees, settings)
 .claude/
+
+# Backend "current" config variants — written via /api/config endpoints
+packages/backend/prompts/system.current.md
+packages/backend/config/llm.current.yaml
+packages/backend/config/registry.current.yaml

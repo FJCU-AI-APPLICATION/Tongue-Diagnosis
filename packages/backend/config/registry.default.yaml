@@ -1,0 +1,57 @@
+detector:
+  enabled: false
+
+heads:
+  - name: front
+    head_type: single
+    arch: resnet50
+    weights_uri: hf:CallMeDaniel/tongue-resnet50-v1/best_resnet50_front.pth
+    input_size: [224, 224]
+    normalise: imagenet
+    class_names:
+      - 淡紅
+      - 紅
+      - 淡
+      - 絳
+      - 青紫
+      - 暗
+      - 微紅
+      - 胖大
+      - 瘦薄
+      - 嫩
+      - 偏斜
+      - 齒痕
+      - 無異常
+      - 瘀血絲
+
+  - name: sublingual
+    head_type: single
+    arch: resnet50
+    weights_uri: hf:CallMeDaniel/tongue-resnet50-v1/best_resnet50_sublingual.pth
+    input_size: [224, 224]
+    normalise: imagenet
+    class_names:
+      - 怒張
+      - 曲張
+      - 囊柱囊泡
+
+category_map:
+  front:
+    淡紅: 舌色
+    紅: 舌色
+    淡: 舌色
+    絳: 舌色
+    青紫: 舌色
+    暗: 舌色
+    微紅: 舌色
+    胖大: 舌質
+    瘦薄: 舌質
+    嫩: 舌質
+    齒痕: 舌質
+    偏斜: 舌態
+    無異常: 舌質
+    瘀血絲: 舌下絡脈
+  sublingual:
+    怒張: 舌下絡脈
+    曲張: 舌下絡脈
+    囊柱囊泡: 舌下絡脈
