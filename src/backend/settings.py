@@ -17,6 +17,16 @@ class BackendSettings(BaseSettings):
 
     model_config = SettingsConfigDict(case_sensitive=False, extra="ignore")
 
+    host: str = Field(
+        default="127.0.0.1",
+        validation_alias="BACKEND_HOST",
+        description="Host interface for the `tongue-backend` console script. Default localhost; set 0.0.0.0 to listen on all interfaces.",
+    )
+    port: int = Field(
+        default=8000,
+        validation_alias="BACKEND_PORT",
+        description="Port for the `tongue-backend` console script.",
+    )
     max_upload_mb: int = Field(
         default=10,
         validation_alias="TONGUE_MAX_UPLOAD_MB",

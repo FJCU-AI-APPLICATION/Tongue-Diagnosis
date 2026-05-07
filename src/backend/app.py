@@ -62,7 +62,12 @@ app = create_app()
 
 
 def run() -> None:
-    """Console-script entry point for `tongue-backend`."""
+    """Console-script entry point for `tongue-backend`.
+
+    Honors BACKEND_HOST / BACKEND_PORT env vars (defaults: 127.0.0.1:8000).
+    """
     import uvicorn
 
-    uvicorn.run("backend.app:app", host="0.0.0.0", port=8000)
+    from backend.settings import settings
+
+    uvicorn.run("backend.app:app", host=settings.host, port=settings.port)

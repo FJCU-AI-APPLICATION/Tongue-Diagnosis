@@ -47,9 +47,14 @@ tests/{ai,backend,frontend}/   one pytest run for the whole repo
 # 1. Install (CPU PyTorch by default; see "GPU" below to switch)
 uv sync --all-extras
 
-# 2. Configure
-# Create .env at repo root with HF_TOKEN and (optionally) GOOGLE_APPLICATION_CREDENTIALS
-echo "HF_TOKEN=hf_..." >> .env
+# 2. Configure — create `.env` at repo root with at least:
+#     HF_TOKEN=hf_your_token_here
+#   Optionally:
+#     GOOGLE_APPLICATION_CREDENTIALS=/abs/path/to/service-account.json
+#     BACKEND_HOST=0.0.0.0          # default 127.0.0.1
+#     BACKEND_PORT=8000             # default 8000
+#     GRADIO_SERVER_NAME=0.0.0.0
+#     GRADIO_SERVER_PORT=7860
 
 # 3. Run the backend (port 8000) — first boot pulls ~190 MB of weights from HF Hub
 export $(grep -v '^#' .env | xargs)
