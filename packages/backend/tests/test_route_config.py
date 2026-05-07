@@ -75,7 +75,7 @@ def test_unknown_section_returns_404(app_client):
 def test_registry_reload_swaps_app_state(app_client, monkeypatch):
     # Stub the registry loader to avoid loading real ONNX
     from tongue_ai import registry as ai_registry
-    monkeypatch.setattr(ai_registry, "_make_session", lambda _p: object())
+    monkeypatch.setattr(ai_registry, "_make_onnx_session", lambda _p: object())
     r = app_client.post("/api/config/registry/reload")
     assert r.status_code == 200
     body = r.json()
