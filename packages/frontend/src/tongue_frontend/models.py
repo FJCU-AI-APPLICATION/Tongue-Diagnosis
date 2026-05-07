@@ -65,5 +65,7 @@ class AnalyzeResponse(BaseModel):
 
 
 class ApiKeyStatus(BaseModel):
+    """Returned by ``/api/config/api_key`` endpoints. Never includes the key."""
+
     is_set: bool
     fingerprint: str | None = None
