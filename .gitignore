@@ -71,6 +71,12 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Project policy: README.md is the single source of truth for project docs.
+# Specs, plans, design notes, and other long-form writing must not be tracked
+# under docs/ — keep them in README, in PR descriptions, or out of the repo.
+# See "Documentation policy" in README.md.
+docs/
+
 # PyBuilder
 .pybuilder/
 target/

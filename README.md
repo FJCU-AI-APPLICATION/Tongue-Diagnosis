@@ -207,3 +207,17 @@ uv add --package tongue-ai <dependency>
 # Reload models from the running backend (no restart needed)
 curl -X POST http://localhost:8000/api/config/registry/reload
 ```
+
+## Documentation policy
+
+**This README is the single source of truth for project documentation.** Do not commit specs, design notes, implementation plans, ADRs, or other long-form writing into the repo. The `docs/` directory is gitignored to enforce this.
+
+Where each kind of writing belongs:
+
+| Kind | Where it goes |
+|---|---|
+| What the project is, how to run it, smoke test, API reference, env vars, models, training | This README — edit it. |
+| Why a change was made, how it was implemented, alternatives considered | Commit messages and PR descriptions — they live with the diff. |
+| Design exploration, ad-hoc notes, scratch | Outside the repo (your own notebook, an issue, a draft PR). |
+
+If the README is becoming too long, split *what we ship* from *how we develop* (e.g. a small `CONTRIBUTING.md` for dev tooling) — but keep the count of tracked Markdown files at the repo root small and intentional. Don't reintroduce `docs/`.
