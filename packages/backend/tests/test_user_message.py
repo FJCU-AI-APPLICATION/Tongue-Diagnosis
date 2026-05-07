@@ -40,3 +40,66 @@ def test_skips_heads_with_error():
 def test_handles_empty_heads_with_no_data_marker():
     msg = build([])
     assert "（無可用判讀資料）" in msg
+
+
+# --- category_map mode (composite-head splitter) ----------------------------
+
+
+CATEGORY_MAP = {
+    "front": {
+        "淡紅": "舌色",
+        "胖大": "舌質",
+        "偏斜": "舌態",
+        "瘀血絲": "舌下絡脈",
+        "無異常": "舌質",
+    },
+    "sublingual": {
+        "怒張": "舌下絡脈",
+        "曲張": "舌下絡脈",
+    },
+}
+
+
+def test_category_map_single_front_prediction_renders_one_bullet():
+    heads = [_hr("front", "single", [("淡紅", 0.78)])]
+    msg = build(heads, CATEGORY_MAP)
+    assert "- 舌色：淡紅（0.78）" in msg
+    assert "front" not in msg  # head name should NOT appear
+
+
+def test_category_map_two_heads_render_two_bullets():
+    heads = [
+        _hr("front", "single", [("胖大", 0.62)]),
+        _hr("sublingual", "single", [("怒張", 0.71)]),
+    ]
+    msg = build(heads, CATEGORY_MAP)
+    assert "- 舌質：胖大（0.62）" in msg
+    assert "- 舌下絡脈：怒張（0.71）" in msg
+
+
+def test_category_map_cross_head_predictions_merge_under_one_category():
+    heads = [
+        _hr("front", "single", [("瘀血絲", 0.51)]),
+        _hr("sublingual", "single", [("怒張", 0.72)]),
+    ]
+    msg = build(heads, CATEGORY_MAP)
+    assert msg.count("- 舌下絡脈") == 1
+    assert "瘀血絲（0.51）" in msg
+    assert "怒張（0.72）" in msg
+
+
+def test_category_map_skips_head_with_error():
+    heads = [
+        _hr("front", "single", [], error="boom"),
+        _hr("sublingual", "single", [("怒張", 0.6)]),
+    ]
+    msg = build(heads, CATEGORY_MAP)
+    assert "boom" not in msg
+    assert "- 舌下絡脈：怒張（0.60）" in msg
+
+
+def test_category_map_orphan_class_is_silently_dropped():
+    heads = [_hr("front", "single", [("UNMAPPED", 0.9)])]
+    msg = build(heads, CATEGORY_MAP)
+    assert "UNMAPPED" not in msg
+    assert "（無可用判讀資料）" in msg

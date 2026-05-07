@@ -13,10 +13,15 @@ dependencies = [
     "label-studio-sdk>=1.0",
     "onnxruntime>=1.17",
     "pyyaml>=6",
+    "huggingface-hub>=0.20",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+training = [
+    "scikit-learn>=1.4",
+    "matplotlib>=3.8",
+]
 
 [build-system]
 requires = ["hatchling"]

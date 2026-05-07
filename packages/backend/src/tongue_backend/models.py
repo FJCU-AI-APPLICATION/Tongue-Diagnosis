@@ -96,6 +96,11 @@ class AnalyzeResponse(BaseModel):
 
     ``heads`` is ``list[HeadResult]`` — Pydantic v2 serialises stdlib
     dataclasses out of the box, so the on-the-wire JSON is unchanged.
+
+    ``category_map`` is echoed back from the active registry so the
+    frontend can render the v4-category breakdown of composite-head
+    predictions without re-implementing the lookup. Empty dict when the
+    registry doesn't define a category_map (per-task heads).
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -104,4 +109,5 @@ class AnalyzeResponse(BaseModel):
     heads: list[HeadResult]
     comment: str
     disclaimer: str
+    category_map: dict[str, dict[str, str]] = Field(default_factory=dict)
     timing_ms: TimingMs

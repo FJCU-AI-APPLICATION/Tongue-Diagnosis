@@ -1,91 +1,54 @@
 # Tongue diagnosis registry — paths are relative to this file's directory.
-# ONNX artefacts live in ../../ai/models/. Edit and Apply & Reload Models from the UI.
+# Amanda's two trained PyTorch ResNet50 composite heads, served from HF Hub.
+# To use this registry, the backend needs HF_TOKEN in the environment with
+# read access to the (private) weights repo.
+#
+# A future per-task ONNX model is trivially additive — just add a head with
+# `onnx_path: ../../ai/models/<name>.onnx` instead of `weights_uri:`. The
+# registry loader dispatches on key presence.
 
 detector: null  # set to a mapping like {onnx_path: ../../ai/models/detect_tongue.onnx, ...}
 
 heads:
-  - task: 舌色
+  - task: front
     head_type: single
-    onnx_path: ../../ai/models/tongue_color.onnx
+    weights_uri: hf:CallMeDaniel/tongue-resnet50-v1/best_resnet50_front.pth
     input_size: [224, 224]
     normalise:
       mean: [0.485, 0.456, 0.406]
       std:  [0.229, 0.224, 0.225]
-    class_names: ["淡","淡紅","微紅","紅","絳","青紫","暗"]
+    class_names: [淡紅, 紅, 淡, 絳, 青紫, 暗, 微紅, 胖大, 瘦薄, 嫩, 偏斜, 齒痕, 無異常, 瘀血絲]
 
-  - task: 舌質
-    head_type: multi
-    threshold: 0.5
-    onnx_path: ../../ai/models/tongue_body.onnx
+  - task: sublingual
+    head_type: single
+    weights_uri: hf:CallMeDaniel/tongue-resnet50-v1/best_resnet50_sublingual.pth
     input_size: [224, 224]
     normalise:
       mean: [0.485, 0.456, 0.406]
       std:  [0.229, 0.224, 0.225]
-    class_names: ["齒痕","胖大","瘦薄","老","嫩","無異常"]
+    class_names: [怒張, 曲張, 囊柱囊泡]
 
-  - task: 舌態
-    head_type: single
-    onnx_path: ../../ai/models/tongue_movement.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["偏斜","無異常"]
-
-  - task: 朱點部位
-    head_type: multi
-    threshold: 0.5
-    onnx_path: ../../ai/models/red_dots.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["舌尖","兩側","中根","無"]
-
-  - task: 瘀斑瘀點部位
-    head_type: multi
-    threshold: 0.5
-    onnx_path: ../../ai/models/ecchymosis.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["舌尖","兩側","中根","無"]
-
-  - task: 裂紋
-    head_type: single
-    onnx_path: ../../ai/models/fissures.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["苔裂","質裂","無異常"]
-
-  - task: 舌津
-    head_type: single
-    onnx_path: ../../ai/models/moisture.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["少","正常","多"]
-
-  - task: 舌苔顏色
-    head_type: multi
-    threshold: 0.5
-    onnx_path: ../../ai/models/coating_color.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["白","黃","灰","黑","染"]
-
-  - task: 舌苔厚薄
-    head_type: single
-    onnx_path: ../../ai/models/coating_thickness.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["無","少","薄少","薄","微","微厚","厚"]
-
-  - task: 舌苔根
-    head_type: single
-    onnx_path: ../../ai/models/coating_root.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["有根","無根","無異常"]
-
-  - task: 舌下絡脈
-    head_type: multi
-    threshold: 0.5
-    onnx_path: ../../ai/models/sublingual.onnx
-    input_size: [224, 224]
-    normalise: {mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225]}
-    class_names: ["怒張","曲張","囊柱囊泡","瘀血絲","舌下肉埠腫脹","無異常"]
+# Bridge composite-head class predictions back to the v4 schema categories
+# the locked Gemini system prompt expects. user_message.build groups across
+# heads, so cross-head predictions for the same v4 category land on one
+# bullet (e.g. front:瘀血絲 + sublingual:怒張 → "舌下絡脈：瘀血絲、怒張").
+category_map:
+  front:
+    淡紅: 舌色
+    紅: 舌色
+    淡: 舌色
+    絳: 舌色
+    青紫: 舌色
+    暗: 舌色
+    微紅: 舌色
+    胖大: 舌質
+    瘦薄: 舌質
+    嫩: 舌質
+    齒痕: 舌質
+    偏斜: 舌態
+    無異常: 舌質           # default-normal per v4 schema
+    瘀血絲: 舌下絡脈
+  sublingual:
+    怒張: 舌下絡脈
+    曲張: 舌下絡脈
+    囊柱囊泡: 舌下絡脈

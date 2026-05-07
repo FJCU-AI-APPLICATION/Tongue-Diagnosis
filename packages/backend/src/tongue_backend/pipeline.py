@@ -54,7 +54,8 @@ def analyze(image_bytes: bytes, *, registry) -> AnalyzeResponse:
     heads = run_all(roi, registry)
     infer_ms = int((time.perf_counter() - t2) * 1000)
 
-    user_msg = user_message.build(heads)
+    category_map = getattr(registry, "category_map", {}) or {}
+    user_msg = user_message.build(heads, category_map=category_map)
     system = _load_prompt()
     llm_cfg = _load_llm_config()
 
@@ -68,6 +69,7 @@ def analyze(image_bytes: bytes, *, registry) -> AnalyzeResponse:
         heads=heads,
         comment=comment,
         disclaimer=DISCLAIMER,
+        category_map=category_map,
         timing_ms=TimingMs(
             decode=decode_ms,
             detect=detect_ms,
