@@ -11,6 +11,7 @@ from tongue_backend.stores import secrets_store
 def tmp_secret(tmp_path, monkeypatch):
     f = tmp_path / "gemini_api_key"
     monkeypatch.setattr(secrets_store, "GEMINI_API_KEY_FILE", f)
+    monkeypatch.setattr(secrets_store, "SECRETS_DIR", tmp_path)
     return f
 
 
@@ -29,6 +30,14 @@ def test_status_when_file_missing(tmp_secret):
 def test_status_when_file_whitespace_only(tmp_secret):
     tmp_secret.write_text("   \n  ")
     assert secrets_store.status() == ApiKeyStatus(is_set=False, fingerprint=None)
+
+
+def test_status_when_file_has_key(tmp_secret):
+    key = "AIzaSyD_example_key_value_xyz_123"
+    tmp_secret.write_text(key)
+    s = secrets_store.status()
+    assert s.is_set is True
+    assert s.fingerprint == secrets_store.fingerprint(key)
 
 
 def test_load_api_key_returns_none_when_missing(tmp_secret):

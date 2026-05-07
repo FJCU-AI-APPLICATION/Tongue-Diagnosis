@@ -13,7 +13,7 @@ from tongue_backend.stores.paths import GEMINI_API_KEY_FILE, SECRETS_DIR
 
 
 class ValidationError(ValueError):
-    """Raised on PUT when the key shape is invalid."""
+    """Raised by save() when the key shape is invalid."""
 
 
 class _ApiKeyValue(BaseModel):

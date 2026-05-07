@@ -58,7 +58,7 @@ class ConfigStatus(BaseModel):
 
 
 class PutBody(BaseModel):
-    """Request body for ``PUT /api/config/{section}``."""
+    """Request body for ``PUT /api/config/{section}`` and ``PUT /api/config/api_key``."""
 
     content: str
 
