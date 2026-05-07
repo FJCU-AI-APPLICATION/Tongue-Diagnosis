@@ -69,3 +69,9 @@ class ApiKeyStatus(BaseModel):
 
     is_set: bool
     fingerprint: str | None = None
+
+
+class LLMModelsResponse(BaseModel):
+    """Returned by ``GET /api/llm/models``."""
+
+    models: list[str]

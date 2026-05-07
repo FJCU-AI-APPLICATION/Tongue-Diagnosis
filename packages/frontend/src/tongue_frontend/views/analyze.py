@@ -51,30 +51,36 @@ def _on_analyze(image: np.ndarray | None):
     return rows, result.comment, result.disclaimer, result.user_message, timing_str
 
 
-def build() -> gr.Blocks:
-    with gr.Blocks() as view:
-        with gr.Row():
-            with gr.Column(scale=1):
-                gr.Markdown("### 舌診影像")
-                img = gr.Image(sources=["webcam", "upload"], type="numpy",
-                               label="拍攝或上傳", height=320)
-                go = gr.Button("分析", variant="primary")
-            with gr.Column(scale=2):
-                gr.Markdown("### 判讀結果")
-                heads_table = gr.Dataframe(
-                    headers=["項目", "預測"],
-                    interactive=False,
-                    label="各項判讀",
-                )
-                comment_md = gr.Markdown(label="醫師建議")
-                disclaimer_md = gr.Markdown()
-                with gr.Accordion("進階 (debug)", open=False):
-                    user_msg_box = gr.Textbox(label="送至 Gemini 的 user message", lines=10)
-                    timing_box = gr.Textbox(label="耗時 (ms)")
+def build(app: gr.Blocks) -> None:
+    """Add the analyze view's components into the current Gradio context.
 
-        go.click(
-            fn=_on_analyze,
-            inputs=[img],
-            outputs=[heads_table, comment_md, disclaimer_md, user_msg_box, timing_box],
-        )
-    return view
+    `app` is unused here (no view.load needed) but kept for API consistency
+    with the editor views. Components are placed directly into whichever
+    Tab/Accordion/Blocks the caller is in — no nested ``gr.Blocks()`` wrapper,
+    which Gradio 6.14 dislikes when stacked across ≥3 sibling Tabs.
+    """
+    del app  # unused — kept for API parity
+    with gr.Row():
+        with gr.Column(scale=1):
+            gr.Markdown("### 舌診影像")
+            img = gr.Image(sources=["webcam", "upload"], type="numpy",
+                           label="拍攝或上傳", height=320)
+            go = gr.Button("分析", variant="primary")
+        with gr.Column(scale=2):
+            gr.Markdown("### 判讀結果")
+            heads_table = gr.Dataframe(
+                headers=["項目", "預測"],
+                interactive=False,
+                label="各項判讀",
+            )
+            comment_md = gr.Markdown(label="醫師建議")
+            disclaimer_md = gr.Markdown()
+            with gr.Accordion("進階 (debug)", open=False):
+                user_msg_box = gr.Textbox(label="送至 Gemini 的 user message", lines=10)
+                timing_box = gr.Textbox(label="耗時 (ms)")
+
+    go.click(
+        fn=_on_analyze,
+        inputs=[img],
+        outputs=[heads_table, comment_md, disclaimer_md, user_msg_box, timing_box],
+    )

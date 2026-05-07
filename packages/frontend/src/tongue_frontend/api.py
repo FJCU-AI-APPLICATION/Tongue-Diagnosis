@@ -14,6 +14,7 @@ from tongue_frontend.models import (
     ApiKeyStatus,
     ConfigStatus,
     HealthResponse,
+    LLMModelsResponse,
     ReloadResult,
 )
 from tongue_frontend.settings import settings
@@ -83,3 +84,10 @@ def clear_api_key() -> ApiKeyStatus:
         r = c.delete("/api/config/api_key")
         r.raise_for_status()
         return ApiKeyStatus.model_validate(r.json())
+
+
+def list_llm_models() -> LLMModelsResponse:
+    with _client() as c:
+        r = c.get("/api/llm/models")
+        r.raise_for_status()
+        return LLMModelsResponse.model_validate(r.json())

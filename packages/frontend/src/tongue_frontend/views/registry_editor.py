@@ -48,25 +48,28 @@ def _reload() -> str:
     return msg
 
 
-def build() -> gr.Blocks:
-    with gr.Blocks() as view:
-        gr.Markdown("### 模型設定 (registry YAML)")
-        gr.Markdown(
-            "編輯各 task head 的 ONNX 路徑、輸入大小、normalisation、class_names、threshold。"
-            " 「儲存」只會持久化 YAML；要套用必須點「Apply & Reload Models」。"
-        )
-        textbox = gr.Code(language="yaml", label="registry.yaml", lines=30)
-        with gr.Row():
-            save_btn = gr.Button("儲存")
-            reset_btn = gr.Button("還原預設")
-            reload_disk_btn = gr.Button("從磁碟重新載入")
-            apply_btn = gr.Button("Apply & Reload Models", variant="primary")
-        status_box = gr.Markdown()
-        reload_status = gr.Markdown()
+def build(app: gr.Blocks) -> None:
+    """Add the registry editor into the current Gradio context.
 
-        view.load(fn=_load, outputs=[textbox, status_box])
-        save_btn.click(fn=_save, inputs=[textbox], outputs=[status_box])
-        reset_btn.click(fn=_reset, outputs=[textbox, status_box])
-        reload_disk_btn.click(fn=_load, outputs=[textbox, status_box])
-        apply_btn.click(fn=_reload, outputs=[reload_status])
-    return view
+    `app` is the root ``gr.Blocks`` — used for ``app.load`` so initial-state
+    hydration fires once when the page loads. No nested ``gr.Blocks()``.
+    """
+    gr.Markdown("### 模型設定 (registry YAML)")
+    gr.Markdown(
+        "編輯各 task head 的 ONNX 路徑、輸入大小、normalisation、class_names、threshold。"
+        " 「儲存」只會持久化 YAML；要套用必須點「Apply & Reload Models」。"
+    )
+    textbox = gr.Code(language="yaml", label="registry.yaml", lines=30)
+    with gr.Row():
+        save_btn = gr.Button("儲存")
+        reset_btn = gr.Button("還原預設")
+        reload_disk_btn = gr.Button("從磁碟重新載入")
+        apply_btn = gr.Button("Apply & Reload Models", variant="primary")
+    status_box = gr.Markdown()
+    reload_status = gr.Markdown()
+
+    app.load(fn=_load, outputs=[textbox, status_box])
+    save_btn.click(fn=_save, inputs=[textbox], outputs=[status_box])
+    reset_btn.click(fn=_reset, outputs=[textbox, status_box])
+    reload_disk_btn.click(fn=_load, outputs=[textbox, status_box])
+    apply_btn.click(fn=_reload, outputs=[reload_status])
