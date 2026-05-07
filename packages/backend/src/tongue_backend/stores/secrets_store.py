@@ -51,3 +51,39 @@ def status() -> ApiKeyStatus:
 
 def clear() -> None:
     GEMINI_API_KEY_FILE.unlink(missing_ok=True)
+
+
+class LiveTestError(RuntimeError):
+    """Raised when the live Gemini test call fails."""
+
+
+def _load_llm_config():
+    """Indirection so tests don't need a real llm.yaml on disk."""
+    from tongue_backend.stores import llm_store
+
+    return llm_store.load_current()
+
+
+def _make_test_client(key: str):
+    """Indirection so tests can replace with a fake without importing google-genai."""
+    from google import genai  # type: ignore[import-not-found]
+
+    return genai.Client(api_key=key)
+
+
+def _live_test(key: str) -> None:
+    """Call Gemini with the candidate key + currently configured model.
+    Raises LiveTestError on any exception."""
+    from google.genai import types  # type: ignore[import-not-found]
+
+    cfg = _load_llm_config()
+    gen_config = types.GenerateContentConfig(max_output_tokens=1)
+    try:
+        client = _make_test_client(key)
+        client.models.generate_content(
+            model=cfg.model,
+            contents="ping",
+            config=gen_config,
+        )
+    except Exception as exc:
+        raise LiveTestError(f"{type(exc).__name__}: {exc}") from exc

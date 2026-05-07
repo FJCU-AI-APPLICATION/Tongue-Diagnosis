@@ -1,4 +1,5 @@
 import hashlib
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -68,3 +69,42 @@ def test_validate_format_rejects_bad_chars():
     with pytest.raises(secrets_store.ValidationError) as e:
         secrets_store._validate_format("AIzaSyD_with spaces_and_$ymbols_xyz")
     assert "金鑰格式不合法" in str(e.value)
+
+
+def test_live_test_calls_genai_with_configured_model(monkeypatch):
+    from tongue_backend.models import LLMConfig
+    cfg = LLMConfig(model="gemini-2.5-flash", temperature=0.0, max_tokens=1, top_p=0.9)
+    monkeypatch.setattr(secrets_store, "_load_llm_config", lambda: cfg)
+
+    captured: dict = {}
+
+    def fake_make_test_client(key: str):
+        captured["key"] = key
+        fake = MagicMock()
+        fake.models.generate_content.return_value = MagicMock(text="ok")
+        captured["client"] = fake
+        return fake
+
+    monkeypatch.setattr(secrets_store, "_make_test_client", fake_make_test_client)
+
+    secrets_store._live_test("AIzaSyD_example_key_value_xyz_123")
+
+    assert captured["key"] == "AIzaSyD_example_key_value_xyz_123"
+    call = captured["client"].models.generate_content.call_args
+    assert call.kwargs["model"] == "gemini-2.5-flash"
+    assert call.kwargs["contents"] == "ping"
+    assert call.kwargs["config"].max_output_tokens == 1
+
+
+def test_live_test_raises_LiveTestError_on_genai_exception(monkeypatch):
+    from tongue_backend.models import LLMConfig
+    cfg = LLMConfig(model="gemini-2.5-flash", temperature=0.0, max_tokens=1, top_p=0.9)
+    monkeypatch.setattr(secrets_store, "_load_llm_config", lambda: cfg)
+
+    fake = MagicMock()
+    fake.models.generate_content.side_effect = ValueError("invalid api key")
+    monkeypatch.setattr(secrets_store, "_make_test_client", lambda _k: fake)
+
+    with pytest.raises(secrets_store.LiveTestError) as e:
+        secrets_store._live_test("AIzaSyD_example_key_value_xyz_123")
+    assert "invalid api key" in str(e.value)
