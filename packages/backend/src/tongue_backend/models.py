@@ -111,3 +111,13 @@ class AnalyzeResponse(BaseModel):
     disclaimer: str
     category_map: dict[str, dict[str, str]] = Field(default_factory=dict)
     timing_ms: TimingMs
+
+
+# --- API key (operator-set Gemini key) --------------------------------------
+
+
+class ApiKeyStatus(BaseModel):
+    """Returned by ``/api/config/api_key`` endpoints. Never includes the key."""
+
+    is_set: bool
+    fingerprint: str | None = None
