@@ -10,7 +10,6 @@ from tongue_backend.stores import secrets_store
 def tmp_secret(tmp_path, monkeypatch):
     f = tmp_path / "gemini_api_key"
     monkeypatch.setattr(secrets_store, "GEMINI_API_KEY_FILE", f)
-    monkeypatch.setattr(secrets_store, "SECRETS_DIR", tmp_path)
     return f
 
 

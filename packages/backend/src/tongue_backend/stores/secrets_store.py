@@ -14,7 +14,7 @@ def fingerprint(key: str) -> str:
 
 
 def load_api_key() -> str | None:
-    """Return the stored key (whitespace stripped) or None if missing/empty."""
+    """Return the stored key (trailing whitespace stripped), or None if the file is missing or whitespace-only."""
     if not GEMINI_API_KEY_FILE.exists():
         return None
     raw = GEMINI_API_KEY_FILE.read_text().strip()
