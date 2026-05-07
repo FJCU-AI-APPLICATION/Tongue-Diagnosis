@@ -14,25 +14,34 @@ def _cfg(**kwargs) -> LLMConfig:
     )
 
 
+def _fake_client_returning(text: str) -> MagicMock:
+    fake = MagicMock()
+    fake.models.generate_content.return_value = MagicMock(text=text)
+    return fake
+
+
 def test_run_calls_sdk_with_system_user_and_config(monkeypatch):
-    fake_agent = MagicMock()
-    fake_agent.run.return_value = "MOCK COMMENT"
-    fake_agent_factory = MagicMock(return_value=fake_agent)
-    monkeypatch.setattr(llm_client, "_make_agent", fake_agent_factory)
+    fake_client = _fake_client_returning("MOCK COMMENT")
+    monkeypatch.setattr(llm_client, "_make_client", lambda: fake_client)
 
     out = llm_client.run(system="SYS", user="USR", config=_cfg())
+
     assert out == "MOCK COMMENT"
-    fake_agent_factory.assert_called_once_with(
-        model="gemini-2.0-flash", instructions="SYS",
-        temperature=0.2, max_tokens=1024, top_p=0.9,
-    )
-    fake_agent.run.assert_called_once_with("USR")
+    fake_client.models.generate_content.assert_called_once()
+    call = fake_client.models.generate_content.call_args
+    assert call.kwargs["model"] == "gemini-2.0-flash"
+    assert call.kwargs["contents"] == "USR"
+    gen_cfg = call.kwargs["config"]
+    assert gen_cfg.system_instruction == "SYS"
+    assert gen_cfg.temperature == 0.2
+    assert gen_cfg.max_output_tokens == 1024
+    assert gen_cfg.top_p == 0.9
 
 
 def test_run_returns_error_stamp_on_exception(monkeypatch):
-    fake_agent = MagicMock()
-    fake_agent.run.side_effect = TimeoutError("upstream timeout")
-    monkeypatch.setattr(llm_client, "_make_agent", lambda **_: fake_agent)
+    fake_client = MagicMock()
+    fake_client.models.generate_content.side_effect = TimeoutError("upstream timeout")
+    monkeypatch.setattr(llm_client, "_make_client", lambda: fake_client)
 
     out = llm_client.run(system="x", user="y", config=_cfg(model="m", temperature=0.0, max_tokens=1, top_p=1.0))
     assert out.startswith("⚠ 醫師建議產生失敗：")
@@ -40,9 +49,8 @@ def test_run_returns_error_stamp_on_exception(monkeypatch):
 
 
 def test_run_returns_error_stamp_on_empty_response(monkeypatch):
-    fake_agent = MagicMock()
-    fake_agent.run.return_value = ""
-    monkeypatch.setattr(llm_client, "_make_agent", lambda **_: fake_agent)
+    fake_client = _fake_client_returning("")
+    monkeypatch.setattr(llm_client, "_make_client", lambda: fake_client)
 
     out = llm_client.run(system="x", user="y", config=_cfg(model="m", temperature=0.0, max_tokens=1, top_p=1.0))
     assert out.startswith("⚠ 醫師建議產生失敗：")

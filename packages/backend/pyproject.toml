@@ -9,7 +9,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "pyyaml>=6",
     "pydantic-settings>=2",
-    "google-adk>=0.2",
+    "google-genai>=1.0",
     "tongue-ai",
 ]
 

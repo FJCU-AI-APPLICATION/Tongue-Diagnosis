@@ -1,4 +1,4 @@
-"""Thin wrapper around Google ADK — call run(system, user, config) → text."""
+"""Thin wrapper around google-genai — call run(system, user, config) → text."""
 
 from __future__ import annotations
 
@@ -8,31 +8,31 @@ from tongue_backend.models import LLMConfig
 ERROR_STAMP = "⚠ 醫師建議產生失敗："
 
 
-def _make_agent(*, model: str, instructions: str, temperature: float,
-                max_tokens: int, top_p: float):
-    """Indirection so tests can monkeypatch without importing google-adk."""
-    from google.adk.agents import Agent  # type: ignore[import-not-found]
+def _make_client():
+    """Indirection so tests can monkeypatch without importing google-genai."""
+    from google import genai  # type: ignore[import-not-found]
 
-    return Agent(
-        model=model,
-        instructions=instructions,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-    )
+    return genai.Client()
 
 
 def run(*, system: str, user: str, config: LLMConfig) -> str:
-    """Call Gemini through ADK with the locked system prompt + user message."""
+    """Call Gemini with the locked system prompt + user message."""
+    from google.genai import types  # type: ignore[import-not-found]
+
+    gen_config = types.GenerateContentConfig(
+        system_instruction=system,
+        temperature=config.temperature,
+        max_output_tokens=config.max_tokens,
+        top_p=config.top_p,
+    )
     try:
-        agent = _make_agent(
+        client = _make_client()
+        resp = client.models.generate_content(
             model=config.model,
-            instructions=system,
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
-            top_p=config.top_p,
+            contents=user,
+            config=gen_config,
         )
-        text = agent.run(user)
+        text = resp.text
     except Exception as exc:
         return f"{ERROR_STAMP}{type(exc).__name__}: {exc}"
 
