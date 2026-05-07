@@ -206,7 +206,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Editable runtime config — written by the API, not source-controlled
-packages/backend/prompts/system.current.md
-packages/backend/config/llm.current.yaml
-packages/backend/config/registry.current.yaml
+# Editable runtime overlays (defaults are tracked; current is local-only)
+assets/config/*.current.yaml
+assets/prompts/*.current.md

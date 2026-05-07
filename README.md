@@ -18,13 +18,20 @@ Local-first proof-of-concept for AI tongue analysis: upload or capture a tongue 
 
 ## Layout
 
-UV workspace monorepo. Frontend talks to backend over HTTP only — no Python imports across the boundary.
+Single uv project; three top-level src-layout packages. Frontend talks to backend over HTTP only — no Python imports across the boundary.
 
 ```
-packages/
-├── ai/        → tongue-ai       (PyTorch + torchvision + huggingface_hub + cv2)
-├── backend/   → tongue-backend  (FastAPI + Google ADK + pyyaml + pydantic-settings)
-└── frontend/  → tongue-frontend (Gradio 4 + httpx)
+src/
+├── ai/        → wheel package `ai`        (PyTorch + huggingface_hub + cv2)
+├── backend/   → wheel package `backend`   (FastAPI + Google ADK + pyyaml + pydantic-settings)
+└── frontend/  → wheel package `frontend`  (Gradio 4 + httpx)
+
+assets/
+├── config/    → llm.{default,current}.yaml, registry.{default,current}.yaml
+├── prompts/   → system.{default,current}.md
+└── secrets/   → local API keys (gitignored)
+
+tests/{ai,backend,frontend}/   one pytest run for the whole repo
 ```
 
 ## Prerequisites
@@ -38,19 +45,23 @@ packages/
 
 ```bash
 # 1. Install (CPU PyTorch by default; see "GPU" below to switch)
-uv sync --all-packages
+uv sync --all-extras
 
-# 2. Configure
-cp packages/backend/.env.example packages/backend/.env
-# edit: HF_TOKEN=hf_...
-# edit: GOOGLE_APPLICATION_CREDENTIALS=/abs/path/to/service-account.json
+# 2. Configure — create `.env` at repo root with at least:
+#     HF_TOKEN=hf_your_token_here
+#   Optionally:
+#     GOOGLE_APPLICATION_CREDENTIALS=/abs/path/to/service-account.json
+#     BACKEND_HOST=0.0.0.0          # default 127.0.0.1
+#     BACKEND_PORT=8000             # default 8000
+#     GRADIO_SERVER_NAME=0.0.0.0
+#     GRADIO_SERVER_PORT=7860
 
 # 3. Run the backend (port 8000) — first boot pulls ~190 MB of weights from HF Hub
-export $(grep -v '^#' packages/backend/.env | xargs)
-uv run uvicorn tongue_backend.app:app --port 8000
+export $(grep -v '^#' .env | xargs)
+uv run uvicorn backend.app:app --port 8000   # or: uv run tongue-backend
 
 # 4. Run the Gradio UI (port 7860) — separate terminal
-uv run python -m tongue_frontend.app
+uv run python -m frontend.app                # or: uv run tongue-frontend
 # open http://localhost:7860
 ```
 
@@ -83,7 +94,7 @@ The `/api/analyze` response shape:
 
 ## Models
 
-The default registry (`packages/backend/config/registry.default.yaml`) ships **two PyTorch ResNet50 composite heads** served from a Hugging Face Hub repo:
+The default registry (`assets/config/registry.default.yaml`) ships **two PyTorch ResNet50 composite heads** served from a Hugging Face Hub repo:
 
 | Head | Classes | v4 categories covered (via `category_map`) |
 |---|---|---|
@@ -108,9 +119,9 @@ Three editable sections, each with a shipped `*.default.*` and a gitignored `*.c
 
 | Section  | File | What's in it |
 |---|---|---|
-| `prompt`   | `packages/backend/prompts/system.{default,current}.md`     | Locked 大眾版 Gemini system prompt — 9 證素 lookup, mandatory 5-section output, disclaimer text |
-| `llm`      | `packages/backend/config/llm.{default,current}.yaml`         | `model`, `temperature` (0–2), `max_tokens` (>0), `top_p` (0–1) |
-| `registry` | `packages/backend/config/registry.{default,current}.yaml`    | Heads + `category_map` |
+| `prompt`   | `assets/prompts/system.{default,current}.md`     | Locked 大眾版 Gemini system prompt — 9 證素 lookup, mandatory 5-section output, disclaimer text |
+| `llm`      | `assets/config/llm.{default,current}.yaml`         | `model`, `temperature` (0–2), `max_tokens` (>0), `top_p` (0–1) |
+| `registry` | `assets/config/registry.{default,current}.yaml`    | Heads + `category_map` |
 
 ## Environment variables
 
@@ -130,10 +141,10 @@ All have sensible defaults; override only when needed.
 
 Run before every merge to `main`. Assumes the prerequisites above.
 
-1. `uv sync --all-packages`
-2. **Terminal A:** `uv run uvicorn tongue_backend.app:app --port 8000`
+1. `uv sync --all-extras`
+2. **Terminal A:** `uv run uvicorn backend.app:app --port 8000`
    - Watch for `Loaded N heads` — should be 2 with the default registry.
-3. **Terminal B:** `uv run python -m tongue_frontend.app` → open <http://localhost:7860>
+3. **Terminal B:** `uv run python -m frontend.app` → open <http://localhost:7860>
 4. **Tab 1 — 舌診分析:** upload a tongue photo, click **分析**. Expect:
    - Two rows in the heads dataframe (`front`, `sublingual`).
    - Markdown comment with sections 主要中醫體質 / 次要中醫體質 / 體質說明 / 證素列表 / 警語.
@@ -145,22 +156,22 @@ Run before every merge to `main`. Assumes the prerequisites above.
 8. **Failure path:** stop backend mid-flow → frontend shows `無法連線到後端`.
 9. **Empty input:** click **分析** with no image → frontend shows `請選擇或拍攝照片`.
 
-If the UI gets you stuck, recover by deleting the `*.current.*` files under `packages/backend/{prompts,config}/` and restarting the backend.
+If the UI gets you stuck, recover by deleting the `*.current.*` files under `assets/{prompts,config}/` and restarting the backend.
 
 ## Training (optional)
 
 Cleaned-up retraining scripts for the two composite heads, behind the `[training]` extra (adds `scikit-learn` + `matplotlib`):
 
 ```bash
-uv sync --all-packages --extra training
+uv sync --all-extras
 
-uv run --package tongue-ai python -m tongue_ai.training.train_front \
+uv run --extra training python -m ai.training.train_front \
     --labels-json data/labels.json \
     --img-dir     data/images/ \
     --weights-out weights/best_resnet50_front.pth \
     --epochs 15
 
-uv run --package tongue-ai python -m tongue_ai.training.train_sublingual \
+uv run --extra training python -m ai.training.train_sublingual \
     --labels-json data/labels.json \
     --img-dir     data/images/ \
     --weights-out weights/best_resnet50_sublingual.pth
@@ -182,7 +193,7 @@ explicit = true
 Then:
 
 ```bash
-uv sync --all-packages --reinstall-package torch --reinstall-package torchvision
+uv sync --all-extras --reinstall-package torch --reinstall-package torchvision
 ```
 
 The backend autodetects `cuda` > `mps` > `cpu`.
@@ -190,19 +201,19 @@ The backend autodetects `cuda` > `mps` > `cpu`.
 ## Tests
 
 ```bash
-uv sync --all-packages --all-extras
-.venv/bin/python -m pytest packages/ai/tests packages/backend/tests packages/frontend/tests
-# 100 passed
+uv sync --all-extras
+uv run pytest
+# 128 passed
 ```
 
 ## Development tips
 
 ```bash
-# Run a single package's REPL
-uv run --package tongue-ai python -c "import tongue_ai; print(tongue_ai.__version__)"
+# Run a quick sanity check
+uv run python -c "import ai; print(ai.__version__)"
 
-# Add a dependency to one package
-uv add --package tongue-ai <dependency>
+# Add a dependency
+uv add <dependency>
 
 # Reload models from the running backend (no restart needed)
 curl -X POST http://localhost:8000/api/config/registry/reload
