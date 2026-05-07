@@ -1,7 +1,9 @@
+import pytest
 from unittest.mock import MagicMock
 
 from tongue_backend.llm import client as llm_client
 from tongue_backend.models import LLMConfig
+from tongue_backend.stores import secrets_store
 
 
 def _cfg(**kwargs) -> LLMConfig:
@@ -55,3 +57,68 @@ def test_run_returns_error_stamp_on_empty_response(monkeypatch):
     out = llm_client.run(system="x", user="y", config=_cfg(model="m", temperature=0.0, max_tokens=1, top_p=1.0))
     assert out.startswith("⚠ 醫師建議產生失敗：")
     assert "模型未產生回應" in out
+
+
+def test_make_client_uses_stored_key(monkeypatch):
+    monkeypatch.setattr(secrets_store, "load_api_key", lambda: "STORED_KEY")
+    captured = {}
+
+    class FakeGenai:
+        def Client(self, api_key):
+            captured["api_key"] = api_key
+            return MagicMock()
+
+    monkeypatch.setattr(llm_client, "_genai_module", lambda: FakeGenai())
+    llm_client._make_client()
+    assert captured["api_key"] == "STORED_KEY"
+
+
+def test_make_client_falls_back_to_google_api_key_env(monkeypatch):
+    monkeypatch.setattr(secrets_store, "load_api_key", lambda: None)
+    monkeypatch.setenv("GOOGLE_API_KEY", "ENV_GOOGLE")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    captured = {}
+
+    class FakeGenai:
+        def Client(self, api_key):
+            captured["api_key"] = api_key
+            return MagicMock()
+
+    monkeypatch.setattr(llm_client, "_genai_module", lambda: FakeGenai())
+    llm_client._make_client()
+    assert captured["api_key"] == "ENV_GOOGLE"
+
+
+def test_make_client_falls_back_to_gemini_api_key_env(monkeypatch):
+    monkeypatch.setattr(secrets_store, "load_api_key", lambda: None)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "ENV_GEMINI")
+    captured = {}
+
+    class FakeGenai:
+        def Client(self, api_key):
+            captured["api_key"] = api_key
+            return MagicMock()
+
+    monkeypatch.setattr(llm_client, "_genai_module", lambda: FakeGenai())
+    llm_client._make_client()
+    assert captured["api_key"] == "ENV_GEMINI"
+
+
+def test_make_client_raises_runtime_error_when_no_key(monkeypatch):
+    monkeypatch.setattr(secrets_store, "load_api_key", lambda: None)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with pytest.raises(RuntimeError) as e:
+        llm_client._make_client()
+    assert "尚未設定 Gemini API key" in str(e.value)
+
+
+def test_run_surfaces_missing_key_error_in_comment_field(monkeypatch):
+    """End-to-end: client.run wraps the RuntimeError into the standard ⚠ stamp."""
+    monkeypatch.setattr(secrets_store, "load_api_key", lambda: None)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    out = llm_client.run(system="x", user="y", config=_cfg(model="m", temperature=0.0, max_tokens=1, top_p=1.0))
+    assert out.startswith("⚠ 醫師建議產生失敗：")
+    assert "尚未設定 Gemini API key" in out
