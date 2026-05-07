@@ -122,9 +122,6 @@ def test_live_test_wraps_load_llm_config_failure(monkeypatch):
     assert "llm.current.yaml missing" in str(e.value)
 
 
-import os
-
-
 def test_save_happy_path_writes_0600(tmp_secret, monkeypatch):
     monkeypatch.setattr(secrets_store, "_live_test", lambda _k: None)
     secrets_store.save("AIzaSyD_example_key_value_xyz_123")
@@ -163,4 +160,6 @@ def test_save_creates_parent_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(secrets_store, "_live_test", lambda _k: None)
 
     secrets_store.save("AIzaSyD_example_key_value_xyz_123")
-    assert (secrets_dir / "gemini_api_key").exists()
+    f = secrets_dir / "gemini_api_key"
+    assert f.exists()
+    assert (f.stat().st_mode & 0o777) == 0o600

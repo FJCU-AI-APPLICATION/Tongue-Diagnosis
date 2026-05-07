@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic import ValidationError as PydanticValidationError
@@ -98,5 +99,8 @@ def save(content: str) -> None:
     candidate = _validate_format(content)
     _live_test(candidate)
     SECRETS_DIR.mkdir(parents=True, exist_ok=True)
-    GEMINI_API_KEY_FILE.write_text(candidate)
-    GEMINI_API_KEY_FILE.chmod(0o600)
+    fd = os.open(GEMINI_API_KEY_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.write(fd, candidate.encode())
+    finally:
+        os.close(fd)
