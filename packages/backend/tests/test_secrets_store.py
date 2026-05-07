@@ -108,3 +108,15 @@ def test_live_test_raises_LiveTestError_on_genai_exception(monkeypatch):
     with pytest.raises(secrets_store.LiveTestError) as e:
         secrets_store._live_test("AIzaSyD_example_key_value_xyz_123")
     assert "invalid api key" in str(e.value)
+
+
+def test_live_test_wraps_load_llm_config_failure(monkeypatch):
+    def boom():
+        raise FileNotFoundError("llm.current.yaml missing")
+    monkeypatch.setattr(secrets_store, "_load_llm_config", boom)
+    monkeypatch.setattr(secrets_store, "_make_test_client", lambda _k: MagicMock())
+
+    with pytest.raises(secrets_store.LiveTestError) as e:
+        secrets_store._live_test("AIzaSyD_example_key_value_xyz_123")
+    assert "FileNotFoundError" in str(e.value)
+    assert "llm.current.yaml missing" in str(e.value)

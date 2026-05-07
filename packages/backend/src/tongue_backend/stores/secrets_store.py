@@ -76,9 +76,9 @@ def _live_test(key: str) -> None:
     Raises LiveTestError on any exception."""
     from google.genai import types  # type: ignore[import-not-found]
 
-    cfg = _load_llm_config()
-    gen_config = types.GenerateContentConfig(max_output_tokens=1)
     try:
+        cfg = _load_llm_config()
+        gen_config = types.GenerateContentConfig(max_output_tokens=1)
         client = _make_test_client(key)
         client.models.generate_content(
             model=cfg.model,
