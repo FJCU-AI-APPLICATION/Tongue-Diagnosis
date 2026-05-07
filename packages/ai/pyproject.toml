@@ -13,6 +13,7 @@ dependencies = [
     "label-studio-sdk>=1.0",
     "onnxruntime>=1.17",
     "pyyaml>=6",
+    "huggingface-hub>=0.20",
 ]
 
 [project.optional-dependencies]
