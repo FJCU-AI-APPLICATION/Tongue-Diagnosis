@@ -92,6 +92,16 @@ def test_render_with_category_map_drops_orphan_class():
     assert out == "- （無可用判讀資料）"
 
 
+def test_render_with_category_map_skips_errored_head():
+    heads = [
+        _hr("front", "single", [], error="boom"),
+        _hr("sublingual", "single", [("怒張", 0.6)]),
+    ]
+    out = render(heads, CATEGORY_MAP)
+    assert "boom" not in out
+    assert "- 舌下絡脈：怒張（0.60）" in out
+
+
 def test_render_does_not_emit_header_or_footer():
     heads = [_hr("舌色", "single", [("淡紅", 0.78)])]
     out = render(heads)
