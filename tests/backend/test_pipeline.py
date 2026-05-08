@@ -52,7 +52,7 @@ def test_analyze_returns_full_response_shape(monkeypatch):
     resp = pl.analyze(_jpeg_bytes(), registry=registry)
 
     assert isinstance(resp, AnalyzeResponse)
-    assert resp.user_message
+    assert resp.predictions_block
     assert len(resp.heads) == 2
     assert resp.comment.startswith("## 醫師建議")
     assert resp.disclaimer.startswith("此為AI自動生成")

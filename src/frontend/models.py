@@ -57,7 +57,7 @@ class TimingMs(BaseModel):
 class AnalyzeResponse(BaseModel):
     """Response shape of ``POST /api/analyze``."""
 
-    user_message: str
+    predictions_block: str
     heads: list[HeadResult]
     comment: str
     disclaimer: str

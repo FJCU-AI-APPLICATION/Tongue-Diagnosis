@@ -11,7 +11,7 @@ from frontend.models import (
 
 
 _ANALYZE_BODY = {
-    "user_message": "msg",
+    "predictions_block": "msg",
     "heads": [],
     "comment": "OK",
     "disclaimer": "d",

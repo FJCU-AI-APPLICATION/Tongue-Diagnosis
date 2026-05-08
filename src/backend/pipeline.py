@@ -65,7 +65,7 @@ def analyze(image_bytes: bytes, *, registry) -> AnalyzeResponse:
     total_ms = int((time.perf_counter() - t0) * 1000)
 
     return AnalyzeResponse(
-        user_message=user_msg,
+        predictions_block=user_msg,
         heads=heads,
         comment=comment,
         disclaimer=DISCLAIMER,

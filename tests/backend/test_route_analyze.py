@@ -30,7 +30,7 @@ def test_analyze_returns_200_with_expected_keys(monkeypatch):
     r = client.post("/api/analyze", files=files)
     assert r.status_code == 200, r.text
     body = r.json()
-    assert set(body.keys()) >= {"user_message", "heads", "comment", "disclaimer", "timing_ms"}
+    assert set(body.keys()) >= {"predictions_block", "heads", "comment", "disclaimer", "timing_ms"}
 
 
 def test_analyze_400_on_missing_file(monkeypatch):
