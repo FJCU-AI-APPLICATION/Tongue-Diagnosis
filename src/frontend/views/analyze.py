@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+from collections import OrderedDict
 
 import gradio as gr
 import httpx
@@ -10,19 +11,62 @@ import numpy as np
 from PIL import Image
 
 from frontend import api
-from frontend.models import HeadResult
+from frontend.models import ClassScore, HeadResult
 from frontend.settings import settings
 
 
-def _heads_to_rows(heads: list[HeadResult]) -> list[list[str]]:
-    rows = []
+def _heads_to_rows(
+    heads: list[HeadResult],
+    category_map: dict[str, dict[str, str]] | None = None,
+) -> list[list[str]]:
+    """Render heads as ``[label, body]`` rows for the 各項判讀 dataframe.
+
+    With ``category_map``, composite-head predictions are grouped under their
+    v4 schema category in Chinese (mirrors ``backend.llm.predictions``).
+    Without it, falls back to ``head.task`` — registries that already use
+    Chinese task names render correctly under the same path.
+    """
+    if not category_map:
+        return [_row_for_head(h, h.task) for h in heads]
+
+    grouped: OrderedDict[str, list[ClassScore]] = OrderedDict()
+    fallback_rows: list[list[str]] = []
     for h in heads:
-        if h.error:
-            rows.append([h.task, f"⚠ {h.error}"])
+        head_map = category_map.get(h.task)
+        if head_map is None:
+            fallback_rows.append(_row_for_head(h, h.task))
             continue
-        preds = "、".join(f"{p.label} ({p.score:.2f})" for p in h.predictions)
-        rows.append([h.task, preds or "(無)"])
+        if h.error:
+            label = " / ".join(_unique_categories(head_map))
+            fallback_rows.append([label, f"⚠ {h.error}"])
+            continue
+        for pred in h.predictions:
+            cat = head_map.get(pred.label)
+            if cat is None:
+                continue  # orphan class — silently dropped, matches backend
+            grouped.setdefault(cat, []).append(pred)
+
+    rows = [[cat, "、".join(_format_pred(p) for p in preds)] for cat, preds in grouped.items()]
+    rows.extend(fallback_rows)
     return rows
+
+
+def _row_for_head(h: HeadResult, label: str) -> list[str]:
+    if h.error:
+        return [label, f"⚠ {h.error}"]
+    body = "、".join(_format_pred(p) for p in h.predictions)
+    return [label, body or "(無)"]
+
+
+def _format_pred(p: ClassScore) -> str:
+    return f"{p.label} ({p.score:.2f})"
+
+
+def _unique_categories(head_map: dict[str, str]) -> list[str]:
+    seen: dict[str, None] = {}
+    for cat in head_map.values():
+        seen.setdefault(cat, None)
+    return list(seen)
 
 
 def _to_jpeg_bytes(image: np.ndarray) -> bytes:
@@ -45,7 +89,7 @@ def _on_analyze(image: np.ndarray | None):
         return [], "", f"⚠ 分析失敗：{err}", "", ""
     except httpx.ConnectError:
         return [], "", f"⚠ 無法連線到後端 ({settings.backend_url}) — 請啟動 backend", "", ""
-    rows = _heads_to_rows(result.heads)
+    rows = _heads_to_rows(result.heads, result.category_map)
     timing = result.timing_ms.model_dump()
     timing_str = " · ".join(f"{k}: {v}ms" for k, v in timing.items())
     return rows, result.comment, result.disclaimer, result.predictions_block, timing_str
