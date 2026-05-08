@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
 
+from backend.llm import prompt
 from backend.models import ConfigStatus, OkResponse, PutBody, ReloadResult
 from backend.stores import llm_store, prompt_store, registry_store
 
@@ -60,7 +61,11 @@ def put_section(section: str, body: PutBody) -> OkResponse:
     _, save_fn, _ = _resolve(section)
     try:
         save_fn(body.content)
-    except (llm_store.ValidationError, registry_store.ValidationError) as e:
+    except (
+        llm_store.ValidationError,
+        registry_store.ValidationError,
+        prompt.PromptValidationError,
+    ) as e:
         raise HTTPException(status_code=422, detail={"error": str(e)})
     return OkResponse()
 

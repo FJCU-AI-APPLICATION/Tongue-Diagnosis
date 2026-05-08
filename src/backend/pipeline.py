@@ -9,19 +9,19 @@ import numpy as np
 
 from ai import detect_tongue, run_all
 
-from backend.llm import client, user_message
+from backend.llm import client, predictions, prompt
 from backend.models import AnalyzeResponse, LLMConfig, TimingMs
 from backend.stores import llm_store, prompt_store
 
 
 DISCLAIMER = "此為AI自動生成，不具醫療建議。若有疾病或疑問，應向專業中醫師諮詢。"
+USER_TRIGGER = "請依規則輸出大眾版報告。"
 
 
 class ImageDecodeError(ValueError):
     """Raised when input bytes cannot be decoded as an image."""
 
 
-# Indirections so tests can monkeypatch the FS reads without touching disk.
 def _load_prompt() -> str:
     return prompt_store.load_current()
 
@@ -39,8 +39,7 @@ def _decode_bgr(image_bytes: bytes) -> np.ndarray:
 
 
 def analyze(image_bytes: bytes, *, registry) -> AnalyzeResponse:
-    """Run the full analysis pipeline. ``registry`` is injected by the caller
-    (the route reads ``request.app.state.registry``)."""
+    """Run the full analysis pipeline. ``registry`` is injected by the caller."""
     t0 = time.perf_counter()
     image = _decode_bgr(image_bytes)
     decode_ms = int((time.perf_counter() - t0) * 1000)
@@ -55,17 +54,24 @@ def analyze(image_bytes: bytes, *, registry) -> AnalyzeResponse:
     infer_ms = int((time.perf_counter() - t2) * 1000)
 
     category_map = getattr(registry, "category_map", {}) or {}
-    user_msg = user_message.build(heads, category_map=category_map)
-    system = _load_prompt()
-    llm_cfg = _load_llm_config()
+    block = predictions.render(heads, category_map=category_map or None)
 
-    t3 = time.perf_counter()
-    comment = client.run(system=system, user=user_msg, config=llm_cfg)
-    llm_ms = int((time.perf_counter() - t3) * 1000)
+    template = _load_prompt()
+    try:
+        system = prompt.render(template, block)
+    except prompt.PromptValidationError as e:
+        comment = f"{client.ERROR_STAMP}{e}"
+        llm_ms = 0
+    else:
+        llm_cfg = _load_llm_config()
+        t3 = time.perf_counter()
+        comment = client.run(system=system, user=USER_TRIGGER, config=llm_cfg)
+        llm_ms = int((time.perf_counter() - t3) * 1000)
+
     total_ms = int((time.perf_counter() - t0) * 1000)
 
     return AnalyzeResponse(
-        user_message=user_msg,
+        predictions_block=block,
         heads=heads,
         comment=comment,
         disclaimer=DISCLAIMER,

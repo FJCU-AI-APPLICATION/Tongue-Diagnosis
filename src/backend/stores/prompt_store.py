@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from backend.llm import prompt
 from backend.models import ConfigStatus
 from backend.stores.paths import PROMPT_CURRENT, PROMPT_DEFAULT
 
@@ -21,6 +22,7 @@ def load_current() -> str:
 
 
 def save(content: str) -> None:
+    prompt.validate(content)
     PROMPT_CURRENT.parent.mkdir(parents=True, exist_ok=True)
     PROMPT_CURRENT.write_text(content)
 

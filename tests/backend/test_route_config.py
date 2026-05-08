@@ -12,7 +12,7 @@ def app_client(monkeypatch, tmp_path):
     ld = tmp_path / "llm.default.yaml"; lc = tmp_path / "llm.current.yaml"
     rd = tmp_path / "registry.default.yaml"; rc = tmp_path / "registry.current.yaml"
 
-    pd.write_text("DEFAULT PROMPT")
+    pd.write_text("DEFAULT PROMPT\n{{PREDICTIONS}}\n")
     ld.write_text("model: x\ntemperature: 0.2\nmax_tokens: 1024\ntop_p: 0.9\n")
     (tmp_path / "tongue_color.onnx").write_bytes(b"")
     rd.write_text(
@@ -36,23 +36,23 @@ def test_get_prompt_returns_default_on_first_read(app_client):
     r = app_client.get("/api/config/prompt")
     assert r.status_code == 200
     body = r.json()
-    assert body["content"] == "DEFAULT PROMPT"
+    assert body["content"] == "DEFAULT PROMPT\n{{PREDICTIONS}}\n"
     assert body["is_default"] is True
 
 
 def test_put_prompt_persists(app_client):
-    r = app_client.put("/api/config/prompt", json={"content": "MY EDIT"})
+    r = app_client.put("/api/config/prompt", json={"content": "MY EDIT\n{{PREDICTIONS}}\n"})
     assert r.status_code == 200
     r = app_client.get("/api/config/prompt")
-    assert r.json()["content"] == "MY EDIT"
+    assert r.json()["content"] == "MY EDIT\n{{PREDICTIONS}}\n"
     assert r.json()["is_default"] is False
 
 
 def test_reset_prompt_restores_default(app_client):
-    app_client.put("/api/config/prompt", json={"content": "EDIT"})
+    app_client.put("/api/config/prompt", json={"content": "EDIT\n{{PREDICTIONS}}\n"})
     r = app_client.post("/api/config/prompt/reset")
     assert r.status_code == 200
-    assert app_client.get("/api/config/prompt").json()["content"] == "DEFAULT PROMPT"
+    assert app_client.get("/api/config/prompt").json()["content"] == "DEFAULT PROMPT\n{{PREDICTIONS}}\n"
 
 
 def test_put_llm_validates_temperature(app_client):
@@ -80,3 +80,16 @@ def test_registry_reload_swaps_app_state(app_client, monkeypatch):
     assert r.status_code == 200
     body = r.json()
     assert "loaded" in body and len(body["loaded"]) == 1
+
+
+def test_put_prompt_rejects_template_without_placeholder(app_client):
+    r = app_client.put("/api/config/prompt", json={"content": "no marker"})
+    assert r.status_code == 422
+    assert "{{PREDICTIONS}}" in r.json()["error"]
+
+
+def test_put_prompt_rejects_template_with_duplicate_placeholder(app_client):
+    body = "a {{PREDICTIONS}} b {{PREDICTIONS}} c"
+    r = app_client.put("/api/config/prompt", json={"content": body})
+    assert r.status_code == 422
+    assert "{{PREDICTIONS}}" in r.json()["error"]

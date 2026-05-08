@@ -41,6 +41,12 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     def _startup() -> None:
+        try:
+            import torch
+            torch.set_num_threads(1)
+            log.info("torch threads pinned to 1 (parallel head execution)")
+        except Exception as e:
+            log.warning("could not pin torch threads: %s", e)
         # Ensure 'current' files exist (copied from default if missing)
         prompt_store.load_current()
         llm_store.load_current()

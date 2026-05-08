@@ -1,15 +1,12 @@
-"""Build the per-request user message for Gemini from HeadResult[].
+"""Render HeadResult[] as the bullet block that fills {{PREDICTIONS}}.
 
-Two modes, selected by whether ``category_map`` is supplied:
+Two modes (selected by ``category_map``):
 
-* No category_map (origin behaviour): one bullet per head, keyed by
-  ``head.task``. Suitable for per-task heads whose ``task`` is already a
-  v4 schema category (e.g. ``舌色``, ``舌質``).
-
-* With category_map: composite-head predictions are split back into v4
-  schema categories via ``category_map[head.task][label] -> v4_category``,
-  grouped across heads, and emitted as one bullet per category. Required
-  for Amanda's two composite heads (``front``, ``sublingual``).
+* No category_map: one bullet per head, keyed by ``head.task``. Suitable for
+  per-task heads whose ``task`` is already a v4 schema category.
+* With category_map: composite-head predictions are split back into v4 schema
+  categories via ``category_map[head.task][label] -> v4_category``, grouped
+  across heads, and emitted as one bullet per category.
 """
 
 from __future__ import annotations
@@ -19,25 +16,21 @@ from collections import OrderedDict
 from ai.types import ClassScore, HeadResult
 
 
-HEADER = "本次舌診判讀結果："
-FOOTER = "請依規則輸出大眾版報告。"
 EMPTY_LINE = "- （無可用判讀資料）"
 
 
-def build(
+def render(
     heads: list[HeadResult],
     category_map: dict[str, dict[str, str]] | None = None,
 ) -> str:
     if category_map:
-        rendered_lines = _build_with_category_map(heads, category_map)
+        lines = _render_with_map(heads, category_map)
     else:
-        rendered_lines = _build_per_head(heads)
-
-    body = "\n".join(rendered_lines) if rendered_lines else EMPTY_LINE
-    return f"{HEADER}\n\n{body}\n\n{FOOTER}"
+        lines = _render_per_head(heads)
+    return "\n".join(lines) if lines else EMPTY_LINE
 
 
-def _build_per_head(heads: list[HeadResult]) -> list[str]:
+def _render_per_head(heads: list[HeadResult]) -> list[str]:
     out: list[str] = []
     for h in heads:
         if h.error or not h.predictions:
@@ -47,7 +40,7 @@ def _build_per_head(heads: list[HeadResult]) -> list[str]:
     return out
 
 
-def _build_with_category_map(
+def _render_with_map(
     heads: list[HeadResult],
     category_map: dict[str, dict[str, str]],
 ) -> list[str]:

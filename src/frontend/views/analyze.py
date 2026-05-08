@@ -48,7 +48,7 @@ def _on_analyze(image: np.ndarray | None):
     rows = _heads_to_rows(result.heads)
     timing = result.timing_ms.model_dump()
     timing_str = " · ".join(f"{k}: {v}ms" for k, v in timing.items())
-    return rows, result.comment, result.disclaimer, result.user_message, timing_str
+    return rows, result.comment, result.disclaimer, result.predictions_block, timing_str
 
 
 def build(app: gr.Blocks) -> None:
@@ -76,7 +76,7 @@ def build(app: gr.Blocks) -> None:
             comment_md = gr.Markdown(label="醫師建議")
             disclaimer_md = gr.Markdown()
             with gr.Accordion("進階 (debug)", open=False):
-                user_msg_box = gr.Textbox(label="送至 Gemini 的 user message", lines=10)
+                user_msg_box = gr.Textbox(label="判讀區塊（已注入 system prompt）", lines=10)
                 timing_box = gr.Textbox(label="耗時 (ms)")
 
     go.click(

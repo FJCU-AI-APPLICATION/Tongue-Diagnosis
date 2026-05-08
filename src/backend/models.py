@@ -101,11 +101,15 @@ class AnalyzeResponse(BaseModel):
     frontend can render the v4-category breakdown of composite-head
     predictions without re-implementing the lookup. Empty dict when the
     registry doesn't define a category_map (per-task heads).
+
+    ``predictions_block`` is the rendered bullet block of head predictions;
+    after Task 9 it is also what gets substituted into the system prompt's
+    ``{{PREDICTIONS}}`` marker.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    user_message: str
+    predictions_block: str
     heads: list[HeadResult]
     comment: str
     disclaimer: str
