@@ -8,7 +8,7 @@ and makes schema drift surface as a ``ValidationError`` at parse time.
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class HealthResponse(BaseModel):
@@ -61,6 +61,7 @@ class AnalyzeResponse(BaseModel):
     heads: list[HeadResult]
     comment: str
     disclaimer: str
+    category_map: dict[str, dict[str, str]] = Field(default_factory=dict)
     timing_ms: TimingMs
 
 
