@@ -2,18 +2,16 @@
 
 Local-first proof-of-concept for AI tongue analysis: upload or capture a tongue photo → run PyTorch ResNet50 classifiers → produce a Traditional Chinese Medicine doctor comment via Gemini under a locked, rule-bound system prompt.
 
-```
-┌──────────┐   HTTP/JSON  ┌──────────┐   Python   ┌────────────────────┐
-│ Frontend │ ───────────► │ Backend  │ ─────────► │       AI           │
-│ Gradio   │              │ FastAPI  │            │ PyTorch + ONNX-    │
-│  4 tabs  │              │ pipeline │            │ optional + ADK     │
-└──────────┘              └──────────┘            └────────────────────┘
-                                │
-                                ▼
-                         ┌──────────────┐
-                         │ Hugging Face │  weights pulled at boot
-                         │     Hub      │  (private repo, HF_TOKEN)
-                         └──────────────┘
+```mermaid
+flowchart LR
+    FE["Frontend<br/>Gradio · 4 tabs"]
+    BE["Backend<br/>FastAPI pipeline"]
+    AI["AI<br/>PyTorch + ONNX-optional + ADK"]
+    HF["Hugging Face Hub<br/>private repo, HF_TOKEN"]
+
+    FE -- "HTTP/JSON" --> BE
+    BE -- "Python" --> AI
+    BE -- "weights pulled at boot" --> HF
 ```
 
 ## Layout
