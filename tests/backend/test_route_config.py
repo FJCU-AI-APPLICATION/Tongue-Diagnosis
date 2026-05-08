@@ -80,3 +80,16 @@ def test_registry_reload_swaps_app_state(app_client, monkeypatch):
     assert r.status_code == 200
     body = r.json()
     assert "loaded" in body and len(body["loaded"]) == 1
+
+
+def test_put_prompt_rejects_template_without_placeholder(app_client):
+    r = app_client.put("/api/config/prompt", json={"content": "no marker"})
+    assert r.status_code == 422
+    assert "{{PREDICTIONS}}" in r.json()["error"]
+
+
+def test_put_prompt_rejects_template_with_duplicate_placeholder(app_client):
+    body = "a {{PREDICTIONS}} b {{PREDICTIONS}} c"
+    r = app_client.put("/api/config/prompt", json={"content": body})
+    assert r.status_code == 422
+    assert "{{PREDICTIONS}}" in r.json()["error"]
