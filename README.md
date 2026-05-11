@@ -39,7 +39,7 @@ tests/{ai,backend,frontend}/   one pytest run for the whole repo
 - [uv](https://docs.astral.sh/uv/)
 - Python 3.11+
 - A Hugging Face access token (`HF_TOKEN`) with read access to the weights repo
-- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey) — pasted into the UI at first run (no env var required)
+- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey) — pasted into the UI at first run, or pre-seeded via `GOOGLE_API_KEY` / `GEMINI_API_KEY` env var for headless deployments
 
 ## Quick start
 
@@ -49,10 +49,12 @@ uv sync --all-extras
 
 # 2. Configure — create `.env` at repo root with at least:
 #     HF_TOKEN=hf_your_token_here
-#   Optionally:
-#     BACKEND_HOST=0.0.0.0          # default 127.0.0.1
+#   Optionally (Gemini key — UI-managed by default; env-set is alt for headless):
+#     GOOGLE_API_KEY=...            # or GEMINI_API_KEY=...
+#   Optionally (override defaults — listen on all interfaces, restrict Gradio):
+#     BACKEND_HOST=0.0.0.0          # default 127.0.0.1 (localhost only)
 #     BACKEND_PORT=8000             # default 8000
-#     GRADIO_SERVER_NAME=127.0.0.1  # default 0.0.0.0
+#     GRADIO_SERVER_NAME=127.0.0.1  # default 0.0.0.0 (all interfaces)
 #     GRADIO_SERVER_PORT=7860       # default 7860
 
 # 3. Run the backend (port 8000) — first boot pulls ~190 MB of weights from HF Hub
@@ -66,7 +68,7 @@ uv run python -m frontend.app                # or: uv run tongue-frontend
 
 ### First-run: configure Gemini
 
-`/api/analyze` will run heads even without a Gemini key, but `comment` will carry the validation stamp. To get real LLM output:
+`/api/analyze` will run heads even without a Gemini key, but `comment` will carry the error stamp (`⚠ 醫師建議產生失敗：RuntimeError: 尚未設定 Gemini API key`). To get real LLM output:
 
 1. Open the UI → **設定** tab → **LLM 設定** accordion.
 2. Paste your Gemini key, click **儲存**. The backend live-tests the key against the configured model before persisting to `assets/secrets/gemini_api_key` (mode `0o600`).
@@ -116,7 +118,7 @@ Four operator-editable surfaces. The three shipped sections (`prompt` / `llm` / 
 |---|---|---|
 | `prompt`   | `assets/prompts/system.{default,current}.md`     | Template must contain exactly one `{{PREDICTIONS}}` marker |
 | `llm`      | `assets/config/llm.{default,current}.yaml`       | `temperature` ∈ [0, 2]; `max_tokens` > 0; `top_p` ∈ (0, 1]; `model` non-empty |
-| `registry` | `assets/config/registry.{default,current}.yaml`  | Shape check delegated to `ai.registry.validate_yaml` — same contract as the runtime loader (exactly one of `weights_uri:` / `onnx_path:`; valid URI scheme; `local:` and `onnx_path:` targets must exist on disk; `hf:` URIs are not contacted) |
+| `registry` | `assets/config/registry.{default,current}.yaml`  | Shape check via `ai.registry.validate_yaml` — exactly one of `weights_uri:` / `onnx_path:`; `local:` and `onnx_path:` targets must exist on disk (`hf:` URIs are deferred to reload) |
 | `api_key`  | `assets/secrets/gemini_api_key` (0o600)          | Format `^[A-Za-z0-9_-]{20,}$` + live `generate_content(max_output_tokens=1)` test |
 
 ## Models
@@ -154,10 +156,11 @@ All have sensible defaults; override only when needed.
 
 | Var | Default | Purpose |
 |---|---|---|
-| `HF_TOKEN`              | —              | Read access to the private weights repo |
-| `BACKEND_HOST`          | `127.0.0.1`    | Bind interface for the `tongue-backend` console script |
-| `BACKEND_PORT`          | `8000`         | Port for the `tongue-backend` console script |
-| `TONGUE_MAX_UPLOAD_MB`  | `10`           | Cap for `/api/analyze` uploads |
+| `HF_TOKEN`                          | —              | Read access to the private weights repo |
+| `GOOGLE_API_KEY` / `GEMINI_API_KEY` | —              | Pre-seed a Gemini key without going through the UI; UI-managed key takes precedence if both are set |
+| `BACKEND_HOST`                      | `127.0.0.1`    | Bind interface for the `tongue-backend` console script |
+| `BACKEND_PORT`                      | `8000`         | Port for the `tongue-backend` console script |
+| `TONGUE_MAX_UPLOAD_MB`              | `10`           | Cap for `/api/analyze` uploads |
 
 ### Frontend
 
@@ -182,9 +185,9 @@ Run before every merge to `main`. Assumes the prerequisites above.
    - Markdown comment with sections 主要中醫體質 / 次要中醫體質 / 體質說明 / 證素列表 / 警語.
    - Disclaimer visible.
    - Advanced panel shows `predictions_block` (v4-category bullets) and `timing_ms`.
-6. **設定 → 提示詞:** delete the `{{PREDICTIONS}}` marker → **儲存** → expect a 422 toast. Restore the marker → **儲存** succeeds. Trim the prompt body → re-run analyze → comment changes. **還原預設** to revert.
+6. **設定 → 提示詞:** delete the `{{PREDICTIONS}}` marker → **儲存** → expect a `⚠ 儲存失敗：` toast naming the missing marker. Restore the marker → **儲存** succeeds. Trim the prompt body → re-run analyze → comment changes. **還原預設** to revert.
 7. **設定 → LLM 設定:** drop `temperature` to `0.0` → **儲存** → re-run; expect roughly identical output across two runs.
-8. **設定 → 模型:** change one head's `weights_uri` to a malformed URI (e.g. `gs://bucket/x.pth`) → **儲存** → expect a 422 toast naming the head. Restore, then point `weights_uri` at a `local:` path that doesn't exist → **儲存** → expect a 422 toast naming the missing file. **還原預設** to restore. **Apply & Reload Models** → expect `已載入 2 heads`.
+8. **設定 → 模型:** change one head's `weights_uri` to a malformed URI (e.g. `gs://bucket/x.pth`) → **儲存** → expect a `⚠ 儲存失敗：` toast naming the head. Restore, then point `weights_uri` at a `local:` path that doesn't exist → **儲存** → expect a `⚠ 儲存失敗：` toast naming the missing file. **還原預設** to restore. **Apply & Reload Models** → expect `已載入 2 heads`.
 9. **Failure paths:**
    - Stop backend mid-flow → frontend shows `無法連線到後端`.
    - Click **分析** with no image → frontend shows `請選擇或拍攝照片`.
@@ -244,7 +247,7 @@ uv run pytest
 ## Troubleshooting
 
 - **`/api/analyze` returns 503 `registry unavailable`.** The registry failed to load at startup. Check the backend log, fix `assets/config/registry.current.yaml`, then `POST /api/config/registry/reload` (or click **Apply & Reload Models**).
-- **`comment` starts with the validation stamp.** Either no Gemini key is set, or the prompt template is missing `{{PREDICTIONS}}`. Set the key in **設定 → LLM 設定**, or restore the prompt default.
+- **`comment` starts with `⚠ 醫師建議產生失敗：`.** Either no Gemini key is set (look for `尚未設定 Gemini API key` in the stamp) or the prompt template is missing `{{PREDICTIONS}}`. Set the key in **設定 → LLM 設定**, or restore the prompt default.
 - **Save returns 422 on the prompt.** `{{PREDICTIONS}}` must appear exactly once.
 - **`GET /api/llm/models` returns 412.** No Gemini key configured yet — set one first.
 - **Stuck UI state.** Delete the `*.current.*` files under `assets/{prompts,config}/` and restart the backend to fall back to shipped defaults.
