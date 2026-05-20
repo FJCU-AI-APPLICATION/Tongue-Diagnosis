@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="中醫舌診系統 - 醫師登入">
+    <title>舌診系統 - 登入</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+    <nav class="nav nav--glass">
+        <div class="wrap nav__row">
+            <a href="main.html" class="logo">
+                <div class="logo__icon"><span>舌</span></div>
+                <span class="logo__name logo__name--light">舌診系統</span>
+            </a>
+            <a href="main.html" class="btn btn--sm btn--ghost">
+                回首頁
+            </a>
+        </div>
+    </nav>
+
+    <main class="login-stage">
+
+        <div class="login-bg" aria-hidden="true">
+            <div class="login-bg__blob login-bg__blob--teal"></div>
+            <div class="login-bg__blob login-bg__blob--blue"></div>
+            <div class="login-bg__blob login-bg__blob--green"></div>
+        </div>
+
+        <div class="login-card">
+            <h1 class="login-card__title">醫師專區登入</h1>
+
+            <form class="login-form" onsubmit="handleLogin(event)">
+                <div class="field">
+                    <label class="field__label" for="email">帳號郵箱</label>
+                    <input class="field__input" id="email" type="email"
+                           placeholder="doctor@example.com" autocomplete="email" required>
+                </div>
+
+                <div class="field">
+                    <label class="field__label" for="password">密碼</label>
+                    <input class="field__input" id="password" type="password"
+                           placeholder="請輸入密碼" autocomplete="current-password" required>
+                </div>
+
+                <div class="login-form__actions">
+                    <button type="submit" class="btn btn--login">登入系統</button>
+                    <button type="button" class="btn btn--ghost-light" onclick="handleForgot()">忘記密碼</button>
+                </div>
+            </form>
+
+            <p class="login-card__err is-hidden" id="login-err" role="alert"></p>
+        </div>
+
+    </main>
+
+    <footer class="footer footer--login">
+        <div class="wrap footer__row">
+            <div class="footer__brand">
+                <p class="footer__name">天主教輔仁大學</p>
+                <p class="footer__copy">© 2026 版權所有</p>
+            </div>
+            <div class="footer__social">
+                <a href="https://www.facebook.com/FuJenCatholicUniversity/" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/fujencatholicuniversity/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+            </div>
+            <div class="footer__links">
+                <a href="#">隱私權政策</a>
+                <span>|</span>
+                <a href="#">服務條款</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="login.js"></script>
+</body>
+</html>
