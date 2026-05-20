@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="中醫舌診系統 - 線上舌診">
+    <title>舌診系統 - 線上舌診</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:,">
+    <link rel="shortcut icon" href="#">
+</head>
+<body>
+
+    <nav class="nav">
+        <div class="wrap nav__row">
+            <div class="logo">
+                <div class="logo__icon"><span>舌</span></div>
+                <span class="logo__name">舌診系統</span>
+            </div>
+            <a href="login.html" class="btn btn--sm btn--dark">
+                <i class="fa-solid fa-user-doctor"></i> Dr. Login
+            </a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="wrap">
+            <h1 class="hero__title">線上舌診</h1>
+
+            <div class="upload" id="upload-container">
+                <div class="upload__preview checkerboard" id="preview-wrapper">
+                    <div class="upload__hint" id="preview-default" onclick="triggerFileInput()">
+                        <i class="fa-solid fa-camera upload__icon"></i>
+                        <div class="upload__divider"></div>
+                        <p>上傳或拍攝您的舌照</p>
+                    </div>
+                    
+                    <img class="upload__img is-hidden" id="preview-img" alt="舌照預覽">
+                    
+                    <video class="upload__img is-hidden" id="camera-stream" autoplay playsinline style="object-fit: cover; transform: scaleX(-1);"></video>
+                </div>
+                
+                <div class="upload__actions" id="action-initial">
+                    <button class="btn btn--outline" onclick="startCamera()">
+                        <i class="fa-solid fa-camera"></i> 舌況拍照
+                    </button>
+                    <button class="btn btn--primary" onclick="triggerFileInput()">
+                        <i class="fa-solid fa-cloud-upload-alt"></i> 上傳照片
+                    </button>
+                </div>
+
+                <div class="upload__actions is-hidden" id="action-camera">
+                    <button class="btn btn--outline" onclick="stopCamera()">
+                        取消
+                    </button>
+                    <button class="btn btn--primary" onclick="takeSnapshot()">
+                        <i class="fa-solid fa-camera-retro"></i> 拍下照片
+                    </button>
+                </div>
+
+                <div class="upload__actions is-hidden" id="action-ready">
+                    <button class="btn btn--outline" onclick="resetUpload()">
+                        重新選擇
+                    </button>
+                    <button class="btn btn--primary" onclick="startDiagnosis()">
+                        <i class="fa-solid fa-microscope"></i> 開始診斷
+                    </button>
+                </div>
+
+                <div id="history-section" class="is-hidden" style="margin-top: 1.5rem; border-top: 1px solid #e5e7eb; padding-top: 1.5rem;">
+                    <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.75rem; text-align: center;">💡 系統偵測到一筆未完成的紀錄</p>
+                    
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; background: #f9fafb; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                        <img id="history-thumb" src="" style="width: 48px; height: 48px; object-fit: cover; border-radius: 0.375rem; border: 1px solid #d1d5db;">
+                        <div style="text-align: left;">
+                            <div style="font-size: 0.875rem; font-weight: 600; color: #374151;">前次看診進度</div>
+                            <div id="history-time" style="font-size: 0.75rem; color: #9ca3af;"></div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn--outline" style="width: 100%;" onclick="location.href='workspace.html'">
+                        <i class="fa-solid fa-clock-rotate-left"></i> 恢復此看診紀錄
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    
+    <div class="banner">
+        <div class="wrap">上傳舌照，讓你更了解自己</div>
+    </div>
+
+    <main class="wrap main">
+        <div class="desc">
+            <h2 class="desc__title">自動化舌頭診斷系統檢測</h2>
+            <p class="desc__body">舌頭是舌體的肌肉組織，除了可以幫助我們咀嚼、吞嚥、說話靈活，且有酸、苦、甘、辛、鹹等味覺，還可以及早透露許多訊息。舌診是中醫診斷的特色，中醫強調整體觀，重視舌頭與人體各部位相互間的關係，認為舌頭通過經絡系統與臟腑器官相連，通過觀察舌質與舌苔、舌形，可以了解臟腑器官的健康狀況和病邪的性質、輕重與變化。</p>
+        </div>
+        <aside class="note">
+            <p>舌頭是舌體的肌肉組織，除了可以幫助我們咀嚼、吞嚥、說話靈活，且有酸、苦、甘、辛、鹹等味覺，還可以及早透露許多訊息。</p>
+            <p>舌診是中醫診斷的特色，中醫強調整體觀，重視舌頭與人體各部位相互間的關係，認為舌頭通過經絡系統與臟腑器官相連，通過觀察舌質與舌苔、舌形，可以了解臟腑器官的健康狀況和病邪的性質、輕重與變化。</p>
+        </aside>
+
+        <section class="partners">
+            <h2 class="partners__title">技術團隊與合作單位</h2>
+            <div class="partners__grid">
+                <div class="card">
+                    <div class="card__head">
+                        <div class="card__icon card__icon--green">🏥</div>
+                        <div>
+                            <h3 class="card__name">中國醫藥大學附設醫院</h3>
+                            <p class="card__tag">專業醫學支援</p>
+                        </div>
+                    </div>
+                    <p class="card__body">「中國醫藥大學醫療體系」秉持核心價值，以發展成為世界一流醫學中心為目標，積極建構智慧大學，發展創新教學，深耕特色研究，針對中醫藥、新藥等重點研究領域。</p>
+                </div>
+
+                <div class="card">
+                    <div class="card__head">
+                        <div class="card__icon card__icon--blue">🎓</div>
+                        <div>
+                            <h3 class="card__name">天主教輔仁大學</h3>
+                            <p class="card__tag">專業技術支援</p>
+                        </div>
+                    </div>
+                    <p class="card__body">「天主教輔仁大學」現設有12個學院、進修部、天主教學術院等附屬機構，並於2017年成立天主教輔仁大學附設醫院，致力於醫療與科技應用的結合。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="wrap footer__row">
+            <div class="footer__brand">
+                <p class="footer__name">天主教輔仁大學</p>
+                <p class="footer__copy">© 2026 版權所有</p>
+            </div>
+            <div class="footer__social">  
+                <a href="https://www.facebook.com/FuJenCatholicUniversity/" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/fujencatholicuniversity/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+            </div>
+            <div class="footer__links">
+                <a href="#">隱私權政策</a>
+                <span>|</span>
+                <a href="#">服務條款</a>
+            </div>
+        </div>
+    </footer>
+
+    <input type="file" id="fileInput" accept="image/png, image/jpeg, image/jpg" class="is-hidden" onchange="handleImageUpload(event)">
+    <script src="main.js"></script>
+    
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const hasHistory = localStorage.getItem('tongue_emr_history');
+            const historyImage = localStorage.getItem('tongue_emr_image');
+            const historyTime = localStorage.getItem('tongue_emr_time');
+            const historySection = document.getElementById('history-section');
+
+            if (hasHistory && hasHistory.trim() !== "" && historySection) {
+                historySection.classList.remove('is-hidden');
+                
+                if (historyImage) {
+                    document.getElementById('history-thumb').src = historyImage;
+                } else {
+                    document.getElementById('history-thumb').style.display = 'none';
+                }
+                
+                if (historyTime) {
+                    document.getElementById('history-time').innerText = historyTime;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

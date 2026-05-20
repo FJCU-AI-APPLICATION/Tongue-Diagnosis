@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/tributejs@5.1.3/dist/tribute.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TongueCare AI Workspace</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .workspace-layout {
+            display: grid;
+            grid-template-columns: 4fr 6fr;
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+        }
+        .visual-pane {
+            background: #f9fafb;
+            padding: 2rem;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        .agent-pane {
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            position: relative;
+            height: 100vh; /* 確保佔滿高度 */
+            overflow: hidden; /* 防止整個頁面亂跑 */
+        }
+        #agent-timeline {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto; /* 核心：讓對話區自己捲動 */
+        }
+        .command-bar {
+            padding: 1rem 2rem;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+            flex-shrink: 0; /* 確保輸入框不被壓扁 */
+        }
+        .command-input {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body class="workspace-layout">
+    
+    <section class="visual-pane">
+        <nav style="margin-bottom: 1rem;">
+            <a href="main.html" style="text-decoration:none; color:#333;">
+                <i class="fa-solid fa-arrow-left"></i> 返回首頁重新拍攝
+            </a>
+        </nav>
+        <h2 style="margin-top: 0;">影像擷取區</h2>
+        
+        <div class="upload__preview" style="background: #e5e7eb; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; border-radius: 1rem; overflow: hidden; margin-bottom: 1rem;">
+            <video id="camera-stream" autoplay playsinline class="is-hidden" style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+            <img id="preview-img" class="is-hidden" style="width: 100%; height: 100%; object-fit: cover;">
+            <div id="preview-default" style="text-align: center; color: #6b7280;">
+                <i class="fa-solid fa-camera" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>點擊開啟相機或上傳照片</p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <button class="btn btn--primary" id="btn-start-camera" style="flex: 1;"><i class="fa-solid fa-video"></i> 開啟相機</button>
+            <button class="btn btn--outline" id="btn-upload" style="flex: 1;"><i class="fa-solid fa-upload"></i> 上傳</button>
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/jpg" class="is-hidden" onchange="handleImageUpload(event)">
+        </div>
+    </section>
+
+    <section class="agent-pane">
+        <div class="timeline" id="agent-timeline">
+            <div style="text-align: center; color: #9ca3af; margin-top: 2rem;">
+                <i class="fa-solid fa-robot" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <p>等待影像輸入。請在下方輸入 @ 呼叫分析模型。</p>
+            </div>
+        </div>
+
+        <div class="command-bar">
+            <input type="text" id="cmd-input" class="command-input" placeholder="輸入 @ 呼叫模型 (例如：@Model_B 分析舌下絡脈)...">
+        </div>
+    </section>
+
+    <script src="app.js"></script>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const timeline = document.getElementById('agent-timeline');
+
+            // 1. 【核心記憶恢復】先檢查有沒有上次未完成的看診對話紀錄
+            const savedHistory = localStorage.getItem('tongue_emr_history');
+            if (savedHistory && savedHistory.trim() !== "") {
+                timeline.innerHTML = savedHistory;
+                console.log('📋 已自動從本地端記憶庫恢復上次的看診紀錄');
+            }
+
+            // 2. 自動顯示首頁傳過來的新結果 (如果是從首頁點選「開始診斷」開啟新檔案)
+            const result = sessionStorage.getItem('diagnosis-result');
+            if (result) {
+                // 🟢 關鍵：既然是首頁傳來的新診斷，代表使用者要「開啟新病歷」，直接清空舊的對話
+                timeline.innerHTML = ''; 
+                localStorage.removeItem('tongue_emr_history'); // 抹除舊記憶
+                
+                const data = JSON.parse(result);
+                if (typeof appendTimelineCard === 'function') {
+                    appendTimelineCard('Model_A', `結果：色澤: ${data.prediction}, 形態: ${data.prediction} (信賴度 ${data.confidence})`, 'normal');
+                    sessionStorage.removeItem('diagnosis-result');
+                }
+            }
+
+            // 3. 自動帶入照片 (避免再次上傳)
+            const sharedImage = sessionStorage.getItem('tongue-img');
+            if (sharedImage) {
+                const previewImg = document.getElementById('preview-img');
+                const previewDefault = document.getElementById('preview-default');
+                if (previewImg && previewDefault) {
+                    previewImg.src = sharedImage;
+                    previewImg.classList.remove('is-hidden');
+                    previewDefault.classList.add('is-hidden');
+                    console.log('✅ 影像與首頁同步成功');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
